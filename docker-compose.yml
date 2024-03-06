@@ -1,0 +1,55 @@
+version: '3'
+
+services:
+  neo4j:
+    container_name: neo4j
+    image: neo4j:latest
+    restart: always
+    environment:
+      NEO4J_AUTH: ${NEO4J_AUTH}
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - ./nextpage-db/neo4j/data:/data
+      - ./nextpage-db/neo4j/logs:/logs
+    networks:
+      - npage
+
+  postgresql:
+    image: postgres:12.0-alpine
+    restart: always
+    volumes:
+      - ./nextpage-db/postgres-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - 5432:5432
+    networks:
+      - npage
+
+  # 스프링 로컬로 실행 시 주석 처리하고 DB만 도커 빌드
+#  springboot:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    restart: always
+#    depends_on:
+#      - neo4j
+#      - postgresql
+#    ports:
+#      - 8080:8080
+#    container_name: springboot
+#    environment:
+#      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
+#      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
+#      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+#      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+#    networks:
+#      - npage
+
+networks:
+  npage:
+    driver: bridge
