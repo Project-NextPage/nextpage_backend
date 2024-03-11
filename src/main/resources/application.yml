@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: ${POSTGRES_URL}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    #    show-sql: true
+
+  neo4j:
+    driver:
+      uri: ${NEO4J_URI}
+      authentication:
+        username: ${NEO4J_USERNAME}
+        password: ${NEO4J_PASSWORD}
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          neo4j: DEBUG
+      hibernate:
+        SQL: DEBUG
