@@ -1,6 +1,6 @@
 package com.nextpage.backend.service;
 
-import com.nextpage.backend.model.Story;
+import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;

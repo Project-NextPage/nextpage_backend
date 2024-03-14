@@ -1,6 +1,6 @@
 package com.nextpage.backend.dto;
 
-import com.nextpage.backend.model.Story;
+import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +18,7 @@ public class DatabaseLoader {
             // 부모 스토리 생성 및 저장
             Story parentStory = new Story();
             parentStory.setUserNickname("ParentUser");
+            parentStory.setContent("부모스토리의 콘텐츠");
             parentStory.setImageUrl("http://image.url/parent");
             parentStory.setCreatedAt(LocalDateTime.now());
             parentStory.setUpdatedAt(LocalDateTime.now());
@@ -27,6 +28,7 @@ public class DatabaseLoader {
             // 첫 번째 자식 스토리 생성 및 저장
             Story childStory1 = new Story();
             childStory1.setUserNickname("ChildUser1");
+            childStory1.setContent("자식스토리1의 콘텐츠");
             childStory1.setImageUrl("http://image.url/child1");
             childStory1.setParentId(parentStory); // 부모 설정
             childStory1.setCreatedAt(LocalDateTime.now());
@@ -37,6 +39,7 @@ public class DatabaseLoader {
             // 두 번째 자식 스토리 생성 및 저장
             Story childStory2 = new Story();
             childStory2.setUserNickname("ChildUser2");
+            childStory2.setContent("자식스토리2의 콘텐츠");
             childStory2.setImageUrl("http://image.url/child2");
             childStory2.setParentId(parentStory); // 부모 설정
             childStory2.setCreatedAt(LocalDateTime.now());

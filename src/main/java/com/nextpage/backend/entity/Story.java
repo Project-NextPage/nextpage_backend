@@ -1,4 +1,4 @@
-package com.nextpage.backend.model;
+package com.nextpage.backend.entity;
 
 
 import lombok.Getter;
@@ -20,6 +20,7 @@ public class Story {
     private Long id;
 
     private String userNickname;
+    private String content;
     private String imageUrl;
 
     // 부모 스토리와의 관계를 나타냅니다.
