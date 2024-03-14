@@ -15,11 +15,10 @@ spring:
     #    show-sql: true
 
   neo4j:
-    driver:
-      uri: ${NEO4J_URI}
-      authentication:
-        username: ${NEO4J_USERNAME}
-        password: ${NEO4J_PASSWORD}
+    uri: ${NEO4J_URI}
+    authentication:
+      username: ${NEO4J_USERNAME}
+      password: ${NEO4J_PASSWORD}
 
 logging:
   level:
