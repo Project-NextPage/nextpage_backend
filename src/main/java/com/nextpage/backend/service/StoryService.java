@@ -18,11 +18,11 @@ public class StoryService {
         this.storyRepository = storyRepository;
     }
 
-//    public List<Story> getStoriesByUserNickname(String userNickname) {
-//        return storyRepository.findByUserNickname(userNickname);
-//    }
+    public List<Story> getRootStories() { // parentId가 없는 루트 스토리들 조회
+        return storyRepository.findRootStories();
+    }
 
-    public StoryDetailsResponseDTO getStoryDetails(Long storyId) {
+    public StoryDetailsResponseDTO getStoryDetails(Long storyId) { // 스토리 상세 조회
         // storyId로 스토리 찾기
         Story story = storyRepository.findById(storyId).orElseThrow(() -> new NoSuchElementException("해당 ID의 스토리를 찾을 수 없습니다 [id: " + storyId + "]"));
 
@@ -32,9 +32,9 @@ public class StoryService {
         responseDTO.setContent(story.getContent());
         responseDTO.setImageUrl(story.getImageUrl());
         responseDTO.setUserNickname(story.getUserNickname());
-        responseDTO.setParentId(story.getParentId() != null ? story.getParentId().getId() : null);
 
-        // 자식 스토리 ID 및 내용을 설정
+        // 부모 자식 스토리의 ID와 content
+        responseDTO.setParentId(story.getParentId() != null ? story.getParentId().getId() : null);
         List<Long> childIds = story.getChildId().stream().map(Story::getId).collect(Collectors.toList());
         responseDTO.setChildId(childIds);
         List<String> childContents = story.getChildId().stream().map(Story::getContent).collect(Collectors.toList());

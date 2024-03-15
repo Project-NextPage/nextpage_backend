@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class DatabaseLoader {
-//
+
 //    @Bean
 //    CommandLineRunner initDatabase(StoryRepository repository) {
 //        return args -> {
