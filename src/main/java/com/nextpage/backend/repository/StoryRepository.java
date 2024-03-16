@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface StoryRepository extends Neo4jRepository<Story,Long> {
 
-    // 부모 관계가 없l
-    @Query("MATCH (s:Story) WHERE NOT (s)-[:PARENT_OF]->() RETURN s")
+    // 부모 관계가 없는 스토리(루트 스토리) 찾기
+    @Query("MATCH (s:Story) WHERE NOT (s)<-[:PARENT_OF]-() RETURN s")
     List<Story> findRootStories();
 }

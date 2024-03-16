@@ -24,11 +24,11 @@ public class Story {
     private String imageUrl;
 
     // 해당 노드를 자식으로 가지는 관계 : parent
-    @Relationship(type = "PARENT_OF", direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = "PARENT_OF", direction = Relationship.Direction.INCOMING)
     private Story parentId;
 
     // 해당 노드를 부모로 가지는 관계 : child
-    @Relationship(type = "PARENT_OF", direction = Relationship.Direction.INCOMING)
+    @Relationship(type = "PARENT_OF", direction = Relationship.Direction.OUTGOING)
     private List<Story> childId;
 
     private LocalDateTime createdAt;
