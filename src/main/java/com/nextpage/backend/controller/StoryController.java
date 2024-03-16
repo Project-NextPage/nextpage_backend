@@ -2,6 +2,7 @@ package com.nextpage.backend.controller;
 
 import com.nextpage.backend.dto.response.ApiResponse;
 import com.nextpage.backend.dto.response.RootResponseDTO;
+import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.service.StoryService;
@@ -64,6 +65,17 @@ public class StoryController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(500, "스토리 조회 중 오류가 발생했습니다.", null));
+        }
+    }
+
+    @GetMapping("/{rootId}") //시나리오 조회
+    public ResponseEntity<ApiResponse> getStoriesByRootId(@PathVariable Long rootId) {
+        List<ScenarioResponseDTO> storiesByRoot = storyService.getStoriesByRootId(rootId);
+        if (storiesByRoot.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(HttpStatus.NOT_FOUND.value(), "해당 ID를 가진 스토리가 존재하지 않습니다.", null));
+        } else {
+            return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "시나리오 조회 완료.", storiesByRoot));
         }
     }
 }
