@@ -6,6 +6,9 @@ import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.service.StoryService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +20,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
+@Tag(name = "Users", description = "User 관리")
 @RestController
 @RequestMapping("/api/v2/stories") // 공통 api
 public class StoryController {
@@ -27,6 +31,7 @@ public class StoryController {
         this.storyService = storyService;
     }
 
+    @Operation(summary = "루트 스토리 조회", description = "루트 스토리의 목록을 조회합니다.")
     @GetMapping // 루트 스토리 조회
     public ResponseEntity<?> getRootStories() {
         try {
@@ -53,6 +58,8 @@ public class StoryController {
         }
     }
 
+    @Operation(summary = "스토리 상세 조회", description = "단일 스토리의 상세 내용을 조회합니다.")
+    @Parameter(name = "storyId", description = "조회할 스토리 아이디")
     @GetMapping("/details/{storyId}") // 스토리 상세 조회
     public ResponseEntity<?> getStoryDetails(@PathVariable("storyId") Long storyId) {
         try {
@@ -68,7 +75,9 @@ public class StoryController {
         }
     }
 
-    @GetMapping("/{rootId}") //시나리오 조회
+    @Operation(summary = "시나리오 조회", description = "시나리오의 스토리 목록을 조회합니다.")
+    @Parameter(name = "rootId", description = "조회할 시나리오의 루트 스토리 아이디")
+    @GetMapping("/{rootId}") // 시나리오 조회
     public ResponseEntity<ApiResponse> getStoriesByRootId(@PathVariable Long rootId) {
         List<ScenarioResponseDTO> storiesByRoot = storyService.getStoriesByRootId(rootId);
         if (storiesByRoot.isEmpty()) {
