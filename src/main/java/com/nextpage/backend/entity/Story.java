@@ -34,4 +34,9 @@ public class Story {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean isDeleted;
+
+    public Story(final String content, final String imageUrl){
+        this.content = content;
+        this.imageUrl = imageUrl;
+    }
 }
