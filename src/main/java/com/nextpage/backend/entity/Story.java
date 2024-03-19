@@ -23,11 +23,11 @@ public class Story {
     private String content;
     private String imageUrl;
 
-    // 부모 스토리와의 관계를 나타냅니다.
+    // 해당 노드를 자식으로 가지는 관계 : parent
     @Relationship(type = "PARENT_OF", direction = Relationship.Direction.INCOMING)
     private Story parentId;
 
-    // 자식 스토리와의 관계를 나타냅니다.
+    // 해당 노드를 부모로 가지는 관계 : child
     @Relationship(type = "PARENT_OF", direction = Relationship.Direction.OUTGOING)
     private List<Story> childId;
 

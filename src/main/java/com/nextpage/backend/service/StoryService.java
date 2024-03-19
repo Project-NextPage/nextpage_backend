@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.nextpage.backend.dto.request.StorySaveRequest;
+import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
@@ -13,14 +14,10 @@ import org.springframework.http.MediaType;
 import java.io.ByteArrayInputStream;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Service
 public class StoryService {
-
 
     private final StoryRepository storyRepository;
     private final AmazonS3 amazonS3;
@@ -32,7 +29,11 @@ public class StoryService {
         this.webClient = webClientBuilder.build();
     }
 
-    public StoryDetailsResponseDTO getStoryDetails(Long storyId) {
+    public List<Story> getRootStories() { // parentId가 없는 루트 스토리들 조회
+        return storyRepository.findRootStories();
+    }
+
+    public StoryDetailsResponseDTO getStoryDetails(Long storyId) { // 스토리 상세 조회
         // storyId로 스토리 찾기
         Story story = storyRepository.findById(storyId).orElseThrow(() -> new NoSuchElementException("해당 ID의 스토리를 찾을 수 없습니다 [id: " + storyId + "]"));
 
@@ -42,9 +43,9 @@ public class StoryService {
         responseDTO.setContent(story.getContent());
         responseDTO.setImageUrl(story.getImageUrl());
         responseDTO.setUserNickname(story.getUserNickname());
-        responseDTO.setParentId(story.getParentId() != null ? story.getParentId().getId() : null);
 
-        // 자식 스토리 ID 및 내용을 설정
+        // 부모 자식 스토리의 ID와 content
+        responseDTO.setParentId(story.getParentId() != null ? story.getParentId().getId() : null);
         List<Long> childIds = story.getChildId().stream().map(Story::getId).collect(Collectors.toList());
         responseDTO.setChildId(childIds);
         List<String> childContents = story.getChildId().stream().map(Story::getContent).collect(Collectors.toList());
@@ -122,4 +123,26 @@ public class StoryService {
             return null;
         }
     }
+
+    public List<ScenarioResponseDTO> getStoriesByRootId(Long rootId) { //시나리오 조회
+        List<Story> result = storyRepository.findAllChildrenByRootId(rootId); //자식 스토리들 전체 내용 일단 가져옴
+        List<ScenarioResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
+
+        for (Story story : result) {
+            ScenarioResponseDTO scenarioResponseDTO = new ScenarioResponseDTO(); //각 자식 스토리의 새로운 DTO객체 생성
+            scenarioResponseDTO.setId(story.getId());
+
+            Long parentId = null; //parentid 가져오는 부분만 따로 지정
+            Optional<Story> parentStoryOptional = storyRepository.findParentByChildId(story.getId());
+            if (parentStoryOptional.isPresent()) {
+                parentId = parentStoryOptional.get().getId();
+            }
+            scenarioResponseDTO.setParentId(parentId);
+
+            scenarioResponseDTO.setImageUrl(story.getImageUrl());
+            stories.add(scenarioResponseDTO); //모든 필요한 부분을 채운 객체를 추가한다.
+        }
+        return stories;
+    }
+
 }

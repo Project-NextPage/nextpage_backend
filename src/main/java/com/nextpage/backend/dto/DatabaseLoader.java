@@ -1,10 +1,18 @@
 package com.nextpage.backend.dto;
 
+import com.nextpage.backend.entity.Story;
+import com.nextpage.backend.repository.StoryRepository;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Configuration
 public class DatabaseLoader {
-//
+
 //    @Bean
 //    CommandLineRunner initDatabase(StoryRepository repository) {
 //        return args -> {
@@ -40,12 +48,40 @@ public class DatabaseLoader {
 //            childStory2.setIsDeleted(false);
 //            childStory2 = repository.save(childStory2);
 //
+//            // 첫번째 자식의 자식 스토리 생성 및 저장
+//            Story childStory1_1 = new Story();
+//            childStory1_1.setUserNickname("ChildUser1_1");
+//            childStory1_1.setContent("자식스토리1의 자식 콘텐츠1");
+//            childStory1_1.setImageUrl("http://image.url/child1_1");
+//            childStory1_1.setParentId(childStory1); // 부모 설정
+//            childStory1_1.setCreatedAt(LocalDateTime.now());
+//            childStory1_1.setUpdatedAt(LocalDateTime.now());
+//            childStory1_1.setIsDeleted(false);
+//            childStory1_1 = repository.save(childStory1_1);
+//
+//            // 첫번째 자식의 자식 스토리 생성 및 저장
+//            Story childStory1_2 = new Story();
+//            childStory1_2.setUserNickname("ChildUser1_2");
+//            childStory1_2.setContent("자식스토리1의 자식 콘텐츠2");
+//            childStory1_2.setImageUrl("http://image.url/child1_2");
+//            childStory1_2.setParentId(childStory1); // 부모 설정
+//            childStory1_2.setCreatedAt(LocalDateTime.now());
+//            childStory1_2.setUpdatedAt(LocalDateTime.now());
+//            childStory1_2.setIsDeleted(false);
+//            childStory1_2 = repository.save(childStory1_2);
+//
 //            // parentStory의 childId 리스트를 업데이트합니다.
 //            List<Story> childStories = new ArrayList<>();
 //            childStories.add(childStory1);
 //            childStories.add(childStory2);
 //            parentStory.setChildId(childStories);
 //            repository.save(parentStory);
+//
+//            List<Story> grandchildStories = new ArrayList<>();
+//            grandchildStories.add(childStory1_2);
+//            grandchildStories.add(childStory1_1);
+//            childStory1.setChildId(grandchildStories);
+//            repository.save(childStory1);
 //        };
 //    }
 }
