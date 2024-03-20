@@ -1,21 +1,32 @@
 package com.nextpage.backend.service;
 
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.nextpage.backend.dto.request.StorySaveRequest;
 import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.http.MediaType;
+import java.io.ByteArrayInputStream;
 
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class StoryService {
 
     private final StoryRepository storyRepository;
+    private final AmazonS3 amazonS3;
+    private final WebClient webClient;
 
-    public StoryService(StoryRepository storyRepository) {
+    public StoryService(AmazonS3 amazonS3, StoryRepository storyRepository, WebClient.Builder webClientBuilder) {
+        this.amazonS3 = amazonS3;
         this.storyRepository = storyRepository;
+        this.webClient = webClientBuilder.build();
     }
 
     public List<Story> getRootStories() { // parentId가 없는 루트 스토리들 조회
@@ -43,6 +54,76 @@ public class StoryService {
         return responseDTO;
     }
 
+    // 스토리 생성 메서드
+    public void generateStory(StorySaveRequest request, Long parentId) {
+        String s3Url = uploadImageToS3(request.getImageUrl());
+        if (s3Url != null) {
+            Story story = request.toEntity();
+            story.setContent(request.getContent());
+            story.setCreatedAt(LocalDateTime.now());
+            story.setUpdatedAt(LocalDateTime.now());
+            story.setIsDeleted(false);
+            story.setUserNickname("test");
+
+            if (parentId != null) {
+                // 부모 노드가 있는 경우
+                Optional<Story> parentStoryOptional = storyRepository.findById(parentId);
+                if (parentStoryOptional.isPresent()) {
+                    Story parentStory = parentStoryOptional.get();
+                    // 부모 노드와 연결
+                    parentStory.getChildId().add(story);
+                    story.setParentId(parentStory);
+                    storyRepository.save(parentStory);
+                } else {
+                    throw new RuntimeException("Parent story not found");
+                }
+            } else {
+                // 부모 노드가 없는 경우
+                storyRepository.save(story);
+            }
+        } else {
+            throw new RuntimeException("이미지 업로드에 실패했습니다.");
+        }
+    }
+
+    // 이미지 다운로드 후 S3에 업로드
+    public String uploadImageToS3(String imageUrl) {
+        try {
+            byte[] imageBytes = downloadImage(imageUrl);
+            if (imageBytes != null) {
+                String fileName = System.currentTimeMillis() + ".webp";
+                ByteArrayInputStream inputStream = new ByteArrayInputStream(imageBytes);
+                ObjectMetadata metadata = new ObjectMetadata();
+                metadata.setContentLength(imageBytes.length);
+                PutObjectRequest putObjectRequest = new PutObjectRequest("bucketnextpage", fileName, inputStream, metadata);
+                amazonS3.putObject(putObjectRequest);
+                return amazonS3.getUrl("bucketnextpage", fileName).toString();
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    // 이미지 다운로드 및 변환
+    private byte[] downloadImage(String imageUrl) {
+        try {
+            byte[] imageBytes = webClient.get()
+                    .uri(imageUrl)
+                    .accept(MediaType.APPLICATION_OCTET_STREAM)
+                    .retrieve()
+                    .bodyToMono(byte[].class)
+                    .block();
+
+            return imageBytes;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     public List<ScenarioResponseDTO> getStoriesByRootId(Long rootId) { //시나리오 조회
         List<Story> result = storyRepository.findAllChildrenByRootId(rootId); //자식 스토리들 전체 내용 일단 가져옴
         List<ScenarioResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
@@ -61,9 +142,7 @@ public class StoryService {
             scenarioResponseDTO.setImageUrl(story.getImageUrl());
             stories.add(scenarioResponseDTO); //모든 필요한 부분을 채운 객체를 추가한다.
         }
-
         return stories;
     }
-
 
 }

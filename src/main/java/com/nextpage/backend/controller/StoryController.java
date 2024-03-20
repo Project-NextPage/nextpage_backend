@@ -1,5 +1,6 @@
 package com.nextpage.backend.controller;
 
+import com.nextpage.backend.dto.request.StorySaveRequest;
 import com.nextpage.backend.dto.response.ApiResponse;
 import com.nextpage.backend.dto.response.RootResponseDTO;
 import com.nextpage.backend.dto.response.ScenarioResponseDTO;
@@ -11,10 +12,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -75,6 +73,17 @@ public class StoryController {
         }
     }
 
+    @PostMapping()
+    public ResponseEntity<?> createStory(@RequestBody StorySaveRequest storyRequest, @RequestParam(required = false) Long parentId) {
+        try {
+            storyService.generateStory(storyRequest, parentId);
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("스토리 생성에 실패했습니다.: " + e.getMessage());
+        }
+    }
+
+
     @Operation(summary = "시나리오 조회", description = "시나리오의 스토리 목록을 조회합니다.")
     @Parameter(name = "rootId", description = "조회할 시나리오의 루트 스토리 아이디")
     @GetMapping("/{rootId}") // 시나리오 조회
@@ -87,4 +96,5 @@ public class StoryController {
             return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "시나리오 조회 완료.", storiesByRoot));
         }
     }
+
 }
