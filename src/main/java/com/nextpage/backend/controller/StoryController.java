@@ -73,11 +73,12 @@ public class StoryController {
         }
     }
 
+    @Operation(summary = "스토리 생성", description = "새로운 스토리를 생성합니다.")
     @PostMapping()
     public ResponseEntity<?> createStory(@RequestBody StorySaveRequest storyRequest, @RequestParam(required = false) Long parentId) {
         try {
             storyService.generateStory(storyRequest, parentId);
-            return ResponseEntity.status(HttpStatus.CREATED).build();
+            return ResponseEntity.status(HttpStatus.CREATED).body("스토리 생성을 완료했습니다.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body("스토리 생성에 실패했습니다.: " + e.getMessage());
         }
