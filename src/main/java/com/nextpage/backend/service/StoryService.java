@@ -8,10 +8,14 @@ import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
+import com.theokanning.openai.image.CreateImageRequest;
+import com.theokanning.openai.image.Image;
+import com.theokanning.openai.service.OpenAiService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.http.MediaType;
 import java.io.ByteArrayInputStream;
+import java.util.stream.Collectors;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -23,11 +27,13 @@ public class StoryService {
     private final StoryRepository storyRepository;
     private final AmazonS3 amazonS3;
     private final WebClient webClient;
+    private final OpenAiService openAiService;
 
-    public StoryService(AmazonS3 amazonS3, StoryRepository storyRepository, WebClient.Builder webClientBuilder) {
+    public StoryService(AmazonS3 amazonS3, StoryRepository storyRepository, WebClient.Builder webClientBuilder, OpenAiService openAiService) {
         this.amazonS3 = amazonS3;
         this.storyRepository = storyRepository;
         this.webClient = webClientBuilder.build();
+        this.openAiService = openAiService;
     }
 
     public List<Story> getRootStories() { // parentId가 없는 루트 스토리들 조회
@@ -146,4 +152,23 @@ public class StoryService {
         return stories;
     }
 
+    public String generatePicture(String content) {
+        try {
+            // 이미지 생성 요청 객체 생성
+            CreateImageRequest request = new CreateImageRequest();
+            request.setPrompt(content); // 요청 객체에 내용 설정
+
+            // OpenAI 서비스를 사용하여 이미지 생성 요청
+            List<Image> images = openAiService.createImage(request).getData();
+            if (images != null && !images.isEmpty()) {
+                // 첫 번째 이미지의 URL 반환
+                return images.get(0).getUrl();
+            } else {
+                throw new RuntimeException("이미지 생성에 실패했습니다.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null; // 이미지 생성에 실패하면 null 반환
+        }
+    }
 }

@@ -98,4 +98,16 @@ public class StoryController {
         }
     }
 
+    @PostMapping("/images")
+    public ResponseEntity<ApiResponse> generateImage(@RequestParam String content) {
+        try {
+            // 클라이언트에서 전송한 JSON 데이터를 StorySaveRequest 객체로 변환하여 받음
+            String imageUrl = storyService.generatePicture(content);
+            return ResponseEntity.ok().body(new ApiResponse(200, "이미지 생성에 성공했습니다.", imageUrl));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(500, "이미지 생성 중 오류가 발생했습니다.", null));
+        }
+    }
+
 }
