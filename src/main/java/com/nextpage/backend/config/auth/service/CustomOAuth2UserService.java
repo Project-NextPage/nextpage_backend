@@ -1,4 +1,4 @@
-package com.nextpage.backend.config.auth;
+package com.nextpage.backend.config.auth.service;
 
 import com.nextpage.backend.config.auth.dto.OAuth2Attributes;
 import com.nextpage.backend.entity.User;
@@ -17,7 +17,7 @@ import java.util.Collections;
 @RequiredArgsConstructor
 @Service
 public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
-    // 구글 로그인 이후 가져온 사용자의 정보 기반으로 가입 및 정보 수정 등의 기능 수행
+    // 소셜 로그인 이후 가져온 사용자의 정보 기반으로 가입 및 정보 수정 등의 기능 수행
 
     private final UserRepository userRepository;
 
@@ -50,8 +50,8 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
     private User saveOrUpdate(OAuth2Attributes attributes) {
         User user = userRepository.findByEmail(attributes.getEmail())
-                // 구글 사용자 정보 업데이트(이미 가입된 사용자) => 업데이트
-                .map(entity -> entity.updateGoogle(attributes.getName()))
+//                // 구글 사용자 정보 업데이트(이미 가입된 사용자) => 업데이트
+//                .map(entity -> entity.updateGoogle(attributes.getName()))
                 // 가입되지 않은 사용자 => User 엔티티 생성
                 .orElse(attributes.toEntity());
         // 생성해서 DB에 등록(회원가입)

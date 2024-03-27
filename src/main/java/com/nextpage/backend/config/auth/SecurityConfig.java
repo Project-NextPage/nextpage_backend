@@ -1,5 +1,8 @@
 package com.nextpage.backend.config.auth;
 
+import com.nextpage.backend.config.auth.handler.OAuth2FailureHandler;
+import com.nextpage.backend.config.auth.handler.OAuth2SuccessHandler;
+import com.nextpage.backend.config.auth.service.CustomOAuth2UserService;
 import com.nextpage.backend.config.jwt.JwtAuthFilter;
 import com.nextpage.backend.config.jwt.TokenService;
 import lombok.RequiredArgsConstructor;

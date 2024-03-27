@@ -1,4 +1,4 @@
-package com.nextpage.backend.config.auth;
+package com.nextpage.backend.config.auth.handler;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,6 +17,6 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         // 인증 실패시 메인 페이지로 이동
-        response.sendRedirect("http://localhost:8080/login/fail");
+        response.sendRedirect("http://localhost:3000/login/fail");
     }
 }

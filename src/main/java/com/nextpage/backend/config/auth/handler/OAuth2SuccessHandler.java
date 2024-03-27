@@ -1,4 +1,4 @@
-package com.nextpage.backend.config.auth;
+package com.nextpage.backend.config.auth.handler;
 
 import com.nextpage.backend.config.jwt.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,9 +29,14 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         String token = tokenService.generateToken(name, email);
 
-        String targetUrl = UriComponentsBuilder.fromUriString("/login/success/")
-                .queryParam("token", token)
-                .build().toUriString();
+//        String targetUrl = UriComponentsBuilder.fromUriString("/login")
+//                .queryParam("token", token)
+//                .build().toUriString();
+
+
+        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth2/redirect")
+        .queryParam("token", token)
+        .build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }
