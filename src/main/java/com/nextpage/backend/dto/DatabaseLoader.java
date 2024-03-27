@@ -1,14 +1,6 @@
 package com.nextpage.backend.dto;
 
-import com.nextpage.backend.entity.Story;
-import com.nextpage.backend.repository.StoryRepository;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Configuration
 public class DatabaseLoader {

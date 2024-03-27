@@ -1,4 +1,7 @@
 spring:
+  profiles:
+    include: oauth, jwt
+
   datasource:
     url: ${POSTGRES_URL}
     username: ${POSTGRES_USERNAME}
@@ -9,6 +12,8 @@ spring:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl # 카멜케이스 허용하기
     properties:
       hibernate:
         format_sql: true
