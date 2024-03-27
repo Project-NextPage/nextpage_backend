@@ -41,10 +41,12 @@ logging:
   level:
     org:
       springframework:
+        security: DEBUG
         data:
           neo4j: DEBUG
       hibernate:
         SQL: DEBUG
+
 
 springdoc:
   swagger-ui:
