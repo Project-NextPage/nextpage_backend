@@ -15,7 +15,7 @@ public interface StoryRepository extends Neo4jRepository<Story,Long> {
     List<Story> findRootStories();
 
     // 해당 스토리의 모든 자식을 가져오기.
-    @Query("MATCH p=(root:Story)-[:PARENT_OF*]->(child:Story) WHERE ID(root) = $rootId RETURN nodes(p)")
+    @Query("MATCH p=(root:Story)-[:PARENT_OF*0..]->(child:Story) WHERE ID(root) = $rootId RETURN nodes(p)")
     List<Story> findAllChildrenByRootId(Long rootId);
 
     // 해당 스토리의 부모 스토리 id 가져오기.

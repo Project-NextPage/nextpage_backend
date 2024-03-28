@@ -8,13 +8,19 @@ import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
+import com.theokanning.openai.image.CreateImageRequest;
+import com.theokanning.openai.image.Image;
+import com.theokanning.openai.service.OpenAiService;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.http.MediaType;
-import java.io.ByteArrayInputStream;
 
+import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,11 +29,13 @@ public class StoryService {
     private final StoryRepository storyRepository;
     private final AmazonS3 amazonS3;
     private final WebClient webClient;
+    private final OpenAiService openAiService;
 
-    public StoryService(AmazonS3 amazonS3, StoryRepository storyRepository, WebClient.Builder webClientBuilder) {
+    public StoryService(AmazonS3 amazonS3, StoryRepository storyRepository, WebClient.Builder webClientBuilder, OpenAiService openAiService) {
         this.amazonS3 = amazonS3;
         this.storyRepository = storyRepository;
         this.webClient = webClientBuilder.build();
+        this.openAiService = openAiService;
     }
 
     public List<Story> getRootStories() { // parentId가 없는 루트 스토리들 조회
@@ -146,4 +154,35 @@ public class StoryService {
         return stories;
     }
 
+    public String generatePicture(String content) {
+        try {
+            // 프롬프트 키워드 설정
+            String prompt_keyword = "Design: a detailed digital illustration drawn with bright colors and clean lines. Please make the following images according to the previous requirements: ";
+            String conditions = "When generating an image, be sure to observe the following conditions: Do not add text to the image. I want an illustration image, not contain text in the image";
+
+            // 프롬프트 구성
+            String prompt_image = conditions + "\n" + prompt_keyword + content;
+
+            // 이미지 생성 요청 객체 생성
+            // 이미지 생성에 사용되는 최대 토큰 수 설정
+            CreateImageRequest createImageRequest = CreateImageRequest.builder()
+                    .prompt(prompt_image)
+                    .size("256x256")    // 이미지 크기 설정
+                    .n(1)            // 생성할 이미지 개수 설정 (1개)
+                    .build();
+
+            // OpenAI 서비스를 사용하여 이미지 생성 요청
+            List<Image> images = openAiService.createImage(createImageRequest).getData();
+
+            if (images != null && !images.isEmpty()) {
+                // 첫 번째 이미지의 URL 반환
+                return images.get(0).getUrl();
+            } else {
+                throw new RuntimeException("이미지 생성에 실패했습니다.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null; // 이미지 생성에 실패하면 null 반환
+        }
+    }
 }
