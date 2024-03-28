@@ -98,6 +98,7 @@ public class StoryController {
         }
     }
 
+    @Operation(summary = "이미지 생성", description = "스토리의 관련된 이미지를 생성합니다.")
     @PostMapping("/images")
     public ResponseEntity<ApiResponse> generateImage(@RequestParam String content) {
         try {
@@ -109,5 +110,4 @@ public class StoryController {
                     .body(new ApiResponse(500, "이미지 생성 중 오류가 발생했습니다.", null));
         }
     }
-
 }
