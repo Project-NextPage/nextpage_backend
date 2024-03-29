@@ -133,10 +133,17 @@ public class StoryService {
         }
     }
 
-    public List<ScenarioResponseDTO> getStoriesByRootId(Long rootId) { //시나리오 조회
-        List<Story> result = storyRepository.findAllChildrenByRootId(rootId); //자식 스토리들 전체 내용 일단 가져옴
-        List<ScenarioResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
+    public List<ScenarioResponseDTO> getStoriesById(Long storyId, boolean isRoot) { //시나리오 조회와 특정 분기 조회
+        List<Story> result;
 
+        if(isRoot){
+            result = storyRepository.findAllChildrenByRootId(storyId); //시나리오 조회
+        }
+        else{
+            result = storyRepository.findRecursivelyByLeafId(storyId); //특정 분기 조회
+        }
+
+        List<ScenarioResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
         for (Story story : result) {
             ScenarioResponseDTO scenarioResponseDTO = new ScenarioResponseDTO(); //각 자식 스토리의 새로운 DTO객체 생성
             scenarioResponseDTO.setId(story.getId());
@@ -153,6 +160,7 @@ public class StoryService {
         }
         return stories;
     }
+
 
     public String generatePicture(String content) {
         try {
