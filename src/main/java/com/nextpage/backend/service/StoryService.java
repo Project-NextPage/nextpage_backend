@@ -17,10 +17,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -158,6 +155,7 @@ public class StoryService {
             scenarioResponseDTO.setImageUrl(story.getImageUrl());
             stories.add(scenarioResponseDTO); //모든 필요한 부분을 채운 객체를 추가한다.
         }
+        Collections.reverse(stories);
         return stories;
     }
 
