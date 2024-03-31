@@ -37,6 +37,10 @@ cloud:
       secret-key: ${AWS_SECRET_KEY}
       access-key: ${AWS_ACCESS_KEY}
 
+openai:
+  api:
+    key: ${GPT_API_KEY}
+
 logging:
   level:
     org:
@@ -64,3 +68,6 @@ springdoc:
   writer-with-default-pretty-printer: true # 예쁘게
   paths-to-match:
     - /api/v2/**
+
+
+
