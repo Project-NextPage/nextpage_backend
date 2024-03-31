@@ -8,25 +8,31 @@ import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
-import com.theokanning.openai.image.CreateImageRequest;
-import com.theokanning.openai.image.Image;
-import com.theokanning.openai.service.OpenAiService;
-import org.springframework.http.MediaType;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 @Service
 public class StoryService {
+    private static final Logger logger = LoggerFactory.getLogger(StoryService.class);
 
     private final StoryRepository storyRepository;
     private final AmazonS3 amazonS3;
     private final WebClient webClient;
     private final OpenAiService openAiService;
+
+    @Value("${AWS_BUCKET}")
+    private String bucketName;
 
     public StoryService(AmazonS3 amazonS3, StoryRepository storyRepository, WebClient.Builder webClientBuilder, OpenAiService openAiService) {
         this.amazonS3 = amazonS3;
@@ -80,52 +86,46 @@ public class StoryService {
                     parentStory.getChildId().add(story);
                     story.setParentId(parentStory);
                     storyRepository.save(parentStory);
-                } else {
-                    throw new RuntimeException("Parent story not found");
-                }
-            } else {
-                // 부모 노드가 없는 경우
-                storyRepository.save(story);
-            }
-        } else {
-            throw new RuntimeException("이미지 업로드에 실패했습니다.");
-        }
+                } else throw new RuntimeException("Parent story not found");
+            } else storyRepository.save(story);
+        } else throw new RuntimeException("이미지 업로드에 실패했습니다.");
     }
 
     // 이미지 다운로드 후 S3에 업로드
     public String uploadImageToS3(String imageUrl) {
         try {
             byte[] imageBytes = downloadImage(imageUrl);
-            if (imageBytes != null) {
-                String fileName = System.currentTimeMillis() + ".webp";
-                ByteArrayInputStream inputStream = new ByteArrayInputStream(imageBytes);
-                ObjectMetadata metadata = new ObjectMetadata();
-                metadata.setContentLength(imageBytes.length);
-                PutObjectRequest putObjectRequest = new PutObjectRequest("bucketnextpage", fileName, inputStream, metadata);
-                amazonS3.putObject(putObjectRequest);
-                return amazonS3.getUrl("bucketnextpage", fileName).toString();
-            } else {
+            if (imageBytes == null) {
+                logger.error("Failed to download image from URL: {}", imageUrl);
                 return null;
             }
+            String fileName = System.currentTimeMillis() + ".webp";
+            ByteArrayInputStream inputStream = new ByteArrayInputStream(imageBytes);
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(imageBytes.length);
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, fileName, inputStream, metadata);
+            amazonS3.putObject(putObjectRequest);
+            return amazonS3.getUrl(bucketName, fileName).toString();
         } catch (Exception e) {
-            e.printStackTrace();
-            return null;
+            logger.error("Image upload failed. Cause: {}", e.getMessage(), e);
+            throw new RuntimeException("이미지 업로드에 실패했습니다. 원인: " + e.getMessage(), e);
         }
     }
 
+
     // 이미지 다운로드 및 변환
     private byte[] downloadImage(String imageUrl) {
+        logger.info("original Url : {}", imageUrl);
         try {
-            byte[] imageBytes = webClient.get()
+            return webClient.get()
                     .uri(imageUrl)
-                    .accept(MediaType.APPLICATION_OCTET_STREAM)
                     .retrieve()
+                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                            response -> Mono.error(new RuntimeException("Error fetching image. Status: " + response.statusCode())))
                     .bodyToMono(byte[].class)
                     .block();
-
-            return imageBytes;
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to download image. URL: {}, Error: {}", imageUrl, e.getMessage(), e);
             return null;
         }
     }
@@ -160,35 +160,20 @@ public class StoryService {
     }
 
 
-    public String generatePicture(String content) {
-        try {
-            // 프롬프트 키워드 설정
-            String prompt_keyword = "Design: a detailed digital illustration drawn with bright colors and clean lines. Please make the following images according to the previous requirements: ";
-            String conditions = "When generating an image, be sure to observe the following conditions: Do not add text to the image. I want an illustration image, not contain text in the image";
+    public Mono<String> generatePicture(String content) {
+        // 프롬프트 설정
+        String promptKeyword = "Design: a detailed digital illustration drawn with bright colors and clean lines. Please make the following images according to the previous requirements: ";
+        String conditions = "When generating an image, be sure to observe the following conditions: Do not add text to the image. I want an illustration image, not contain text in the image";
 
-            // 프롬프트 구성
-            String prompt_image = conditions + "\n" + prompt_keyword + content;
+        // 프롬프트 구성
+        String promptImage = conditions + "\n" + promptKeyword + content;
 
-            // 이미지 생성 요청 객체 생성
-            // 이미지 생성에 사용되는 최대 토큰 수 설정
-            CreateImageRequest createImageRequest = CreateImageRequest.builder()
-                    .prompt(prompt_image)
-                    .size("256x256")    // 이미지 크기 설정
-                    .n(1)            // 생성할 이미지 개수 설정 (1개)
-                    .build();
-
-            // OpenAI 서비스를 사용하여 이미지 생성 요청
-            List<Image> images = openAiService.createImage(createImageRequest).getData();
-
-            if (images != null && !images.isEmpty()) {
-                // 첫 번째 이미지의 URL 반환
-                return images.get(0).getUrl();
-            } else {
-                throw new RuntimeException("이미지 생성에 실패했습니다.");
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null; // 이미지 생성에 실패하면 null 반환
-        }
+        // OpenAiService를 통해 이미지 생성 요청 후 URL 반환
+        return openAiService.generateImage(promptImage)
+                .onErrorResume(e -> {
+                    // 에러 처리 로직. 예를 들어, 로깅하거나 기본 이미지 URL 반환
+                    System.err.println("Error generating image: " + e.getMessage());
+                    return Mono.just("Error or default image URL");
+                });
     }
 }
