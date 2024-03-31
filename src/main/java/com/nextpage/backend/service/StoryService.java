@@ -17,6 +17,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -112,18 +116,21 @@ public class StoryService {
         }
     }
 
-
     // 이미지 다운로드 및 변환
     private byte[] downloadImage(String imageUrl) {
-        logger.info("original Url : {}", imageUrl);
+        logger.info("Original URL: {}", imageUrl);
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(imageUrl))
+                .build();
+
         try {
-            return webClient.get()
-                    .uri(imageUrl)
-                    .retrieve()
-                    .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
-                            response -> Mono.error(new RuntimeException("Error fetching image. Status: " + response.statusCode())))
-                    .bodyToMono(byte[].class)
-                    .block();
+            HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            int statusCode = response.statusCode();
+            if (statusCode >= 400) {
+                throw new RuntimeException("Error fetching image. Status: " + statusCode);
+            }
+            return response.body();
         } catch (Exception e) {
             logger.error("Failed to download image. URL: {}, Error: {}", imageUrl, e.getMessage(), e);
             return null;
@@ -159,7 +166,6 @@ public class StoryService {
         return stories;
     }
 
-
     public Mono<String> generatePicture(String content) {
         // 프롬프트 설정
         String promptKeyword = "Design: a detailed digital illustration drawn with bright colors and clean lines. Please make the following images according to the previous requirements: ";
@@ -176,4 +182,5 @@ public class StoryService {
                     return Mono.just("Error or default image URL");
                 });
     }
+
 }
