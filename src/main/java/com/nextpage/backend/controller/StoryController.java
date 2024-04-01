@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
-@Tag(name = "Users", description = "User 관리")
+@Tag(name = "Stories", description = "Story 관리")
 @RestController
 @RequestMapping("/api/v2/stories") // 공통 api
 public class StoryController {
