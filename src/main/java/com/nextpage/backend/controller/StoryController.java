@@ -1,10 +1,7 @@
 package com.nextpage.backend.controller;
 
 import com.nextpage.backend.dto.request.StorySaveRequest;
-import com.nextpage.backend.dto.response.ApiResponse;
-import com.nextpage.backend.dto.response.RootResponseDTO;
-import com.nextpage.backend.dto.response.ScenarioResponseDTO;
-import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
+import com.nextpage.backend.dto.response.*;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.service.StoryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -92,7 +89,7 @@ public class StoryController {
     @Parameter(name = "rootId", description = "조회할 시나리오의 루트 스토리 아이디")
     @GetMapping("/{rootId}") // 시나리오 조회
     public ResponseEntity<ApiResponse> getStoriesByRootId(@PathVariable Long rootId) {
-        List<ScenarioResponseDTO> storiesByRoot = storyService.getStoriesById(rootId, true);
+        List<ScenarioResponseDTO> storiesByRoot = storyService.getStoriesByRootId(rootId);
         if (storiesByRoot.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse(HttpStatus.NOT_FOUND.value(), "해당 ID를 가진 스토리가 존재하지 않습니다.", null));
@@ -105,7 +102,7 @@ public class StoryController {
     @Parameter(name = "storyId", description = "조회할 분기의 리프 스토리 아이디")
     @GetMapping("/branch/{storyId}") // 특정 분기 조회
     public ResponseEntity<ApiResponse> getStoriesByleafId(@PathVariable Long storyId) {
-        List<ScenarioResponseDTO> storiesByLeaf = storyService.getStoriesById(storyId ,false);
+        List<StoryListResponseDTO> storiesByLeaf = storyService.getStoriesByleafId(storyId);
         if (storiesByLeaf.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse(HttpStatus.NOT_FOUND.value(), "해당 ID를 가진 스토리가 존재하지 않습니다.", null));

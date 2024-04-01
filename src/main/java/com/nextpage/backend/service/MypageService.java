@@ -1,6 +1,7 @@
 package com.nextpage.backend.service;
 
 import com.nextpage.backend.dto.response.ScenarioResponseDTO;
+import com.nextpage.backend.dto.response.StoryListResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
 import org.springframework.stereotype.Service;
@@ -18,26 +19,16 @@ public class MypageService {
         this.storyRepository = storyRepository;
     }
 
-    public List<ScenarioResponseDTO> getStoriesByNickname(String nickname){
-        List<Story> result;
-
-        result = storyRepository.findStoriesByNickname(nickname); //시나리오 조회
-
-
-        List<ScenarioResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
+    public List<StoryListResponseDTO> getStoriesByNickname(String nickname) { //내가 작성한 스토리 조회
+        List<Story> result= storyRepository.findStoriesByNickname(nickname);
+        List<StoryListResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
         for (Story story : result) {
-            ScenarioResponseDTO scenarioResponseDTO = new ScenarioResponseDTO(); //각 자식 스토리의 새로운 DTO객체 생성
-            scenarioResponseDTO.setId(story.getId());
-
-            Long parentId = null; //parentid 가져오는 부분만 따로 지정
-            Optional<Story> parentStoryOptional = storyRepository.findParentByChildId(story.getId());
-            if (parentStoryOptional.isPresent()) {
-                parentId = parentStoryOptional.get().getId();
-            }
-            scenarioResponseDTO.setParentId(parentId);
-
-            scenarioResponseDTO.setImageUrl(story.getImageUrl());
-            stories.add(scenarioResponseDTO); //모든 필요한 부분을 채운 객체를 추가한다.
+            StoryListResponseDTO storyListResponseDTO = new StoryListResponseDTO(); //각 자식 스토리의 새로운 DTO객체 생성
+            storyListResponseDTO.setId(story.getId());
+            storyListResponseDTO.setContent(story.getContent());
+            storyListResponseDTO.setUserNickname(story.getUserNickname());
+            storyListResponseDTO.setImageUrl(story.getImageUrl());
+            stories.add(storyListResponseDTO); //모든 필요한 부분을 채운 객체를 추가한다.
         }
         Collections.reverse(stories);
         return stories;

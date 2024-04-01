@@ -2,6 +2,7 @@ package com.nextpage.backend.controller;
 
 import com.nextpage.backend.dto.response.ApiResponse;
 import com.nextpage.backend.dto.response.ScenarioResponseDTO;
+import com.nextpage.backend.dto.response.StoryListResponseDTO;
 import com.nextpage.backend.service.MypageService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -30,7 +31,7 @@ public class MypageController {
     @Parameter(name = "nickname", description = "조회할 스토리들의 작성자 닉네임")
     @GetMapping("/mystories/{nickname}") // 특정 분기 조회
     public ResponseEntity<ApiResponse> getStoriesByNickname(@PathVariable String nickname) {
-        List<ScenarioResponseDTO> storiesByNickname = mypageService.getStoriesByNickname(nickname);
+        List<StoryListResponseDTO> storiesByNickname = mypageService.getStoriesByNickname(nickname);
         if (storiesByNickname.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse(HttpStatus.NOT_FOUND.value(), "해당 작성자가 작성한 스토리가 존재하지 않습니다.", null));
