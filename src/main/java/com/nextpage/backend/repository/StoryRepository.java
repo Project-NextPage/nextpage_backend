@@ -25,4 +25,8 @@ public interface StoryRepository extends Neo4jRepository<Story,Long> {
     // 특정 분기 조회를 위한 해당 스토리의 부모 재귀적으로 가져오기
     @Query("MATCH p=(child:Story)<-[:PARENT_OF*0..]-(parent:Story) WHERE ID(child) = $storyId RETURN nodes(p)")
     List<Story> findRecursivelyByLeafId(Long storyId);
+
+
+    @Query("MATCH (s:Story {userNickname: $nickname}) RETURN s")
+    List<Story> findStoriesByNickname(String nickname);
 }

@@ -6,6 +6,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.nextpage.backend.dto.request.StorySaveRequest;
 import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
+import com.nextpage.backend.dto.response.StoryListResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -137,16 +138,8 @@ public class StoryService {
         }
     }
 
-    public List<ScenarioResponseDTO> getStoriesById(Long storyId, boolean isRoot) { //시나리오 조회와 특정 분기 조회
-        List<Story> result;
-
-        if(isRoot){
-            result = storyRepository.findAllChildrenByRootId(storyId); //시나리오 조회
-        }
-        else{
-            result = storyRepository.findRecursivelyByLeafId(storyId); //특정 분기 조회
-        }
-
+    public List<ScenarioResponseDTO> getStoriesByRootId(Long rootId) { //시나리오 조회
+        List<Story> result= storyRepository.findAllChildrenByRootId(rootId); //시나리오 조회
         List<ScenarioResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
         for (Story story : result) {
             ScenarioResponseDTO scenarioResponseDTO = new ScenarioResponseDTO(); //각 자식 스토리의 새로운 DTO객체 생성
@@ -161,6 +154,21 @@ public class StoryService {
 
             scenarioResponseDTO.setImageUrl(story.getImageUrl());
             stories.add(scenarioResponseDTO); //모든 필요한 부분을 채운 객체를 추가한다.
+        }
+        Collections.reverse(stories);
+        return stories;
+    }
+
+    public List<StoryListResponseDTO> getStoriesByleafId(Long leafId) { //특정 분기 조회
+        List<Story> result= storyRepository.findRecursivelyByLeafId(leafId);
+        List<StoryListResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
+        for (Story story : result) {
+            StoryListResponseDTO storyListResponseDTO = new StoryListResponseDTO(); //각 자식 스토리의 새로운 DTO객체 생성
+            storyListResponseDTO.setId(story.getId());
+            storyListResponseDTO.setContent(story.getContent());
+            storyListResponseDTO.setUserNickname(story.getUserNickname());
+            storyListResponseDTO.setImageUrl(story.getImageUrl());
+            stories.add(storyListResponseDTO); //모든 필요한 부분을 채운 객체를 추가한다.
         }
         Collections.reverse(stories);
         return stories;
