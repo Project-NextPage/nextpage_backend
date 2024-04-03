@@ -1,6 +1,5 @@
 package com.nextpage.backend.config.auth.dto;
 
-import com.nextpage.backend.entity.User;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -59,11 +58,11 @@ public class OAuth2Attributes {
                 .build();
     }
 
-    // User 엔티티 생성
-    public User toEntity() {
-        return User.builder()
-                .email(email)
-                .nickname(name)
-                .build();
-    }
+//    // User 엔티티 생성
+//    public User toEntity() {
+//        return User.builder()
+//                .email(email)
+//                .nickname(name)
+//                .build();
+//    }
 }

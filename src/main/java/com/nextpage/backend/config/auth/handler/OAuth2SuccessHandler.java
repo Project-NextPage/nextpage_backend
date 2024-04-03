@@ -1,6 +1,8 @@
 package com.nextpage.backend.config.auth.handler;
 
 import com.nextpage.backend.config.jwt.TokenService;
+import com.nextpage.backend.entity.User;
+import com.nextpage.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -12,12 +14,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final TokenService tokenService;
+    private final UserRepository userRepository;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response
@@ -26,16 +30,17 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
+        System.out.println("email: " + email);
 
         String token = tokenService.generateToken(name, email);
 
-//        String targetUrl = UriComponentsBuilder.fromUriString("/login")
-//                .queryParam("token", token)
-//                .build().toUriString();
+        Optional<User> user = userRepository.findByEmail(email);
+        Long userId = null;
 
+        if (user.isPresent()) { userId = user.get().getId(); }
 
         String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth2/redirect")
-        .queryParam("token", token)
+        .queryParam("id", userId).queryParam("token", token)
         .build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
