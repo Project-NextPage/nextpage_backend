@@ -21,6 +21,8 @@ public class UserService {
         String nickname = request.getNickname();
         if (userRepository.existsByEmail(email)) { // 이미 존재하는 이메일이면 유저 생성 x
             throw new RuntimeException("이미 존재하는 이메일입니다.");
+        } else if (userRepository.existsByNickname(nickname)) {
+            throw new RuntimeException("중복된 닉네임입니다.");
         }
         User newUser = new User(); // 유저 생성
         newUser.setEmail(email);

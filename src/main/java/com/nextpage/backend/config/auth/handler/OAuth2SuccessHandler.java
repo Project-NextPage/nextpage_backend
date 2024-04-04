@@ -30,17 +30,19 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
         String name = oAuth2User.getAttribute("name");
-        System.out.println("email: " + email);
-
-        String token = tokenService.generateToken(name, email);
 
         Optional<User> user = userRepository.findByEmail(email);
         Long userId = null;
 
-        if (user.isPresent()) { userId = user.get().getId(); }
+        if (user.isPresent()) {
+            userId = user.get().getId();
+            name = user.get().getNickname();
+        }
+
+        String token = tokenService.generateToken(userId, email, name);
 
         String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth2/redirect")
-        .queryParam("id", userId).queryParam("token", token)
+        .queryParam("token", token)
         .build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
