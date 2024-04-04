@@ -8,10 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Users", description = "User 관리")
 @RestController
@@ -29,5 +26,13 @@ public class UserController {
         UserResponseDTO user = userService.createUser(request);
         return ResponseEntity.ok()
                 .body(new ApiResponse(HttpStatus.OK.value(), "유저 정보를 불러왔습니다.", user));
+    }
+
+    @Operation(summary = "회원가입 및 로그인", description = "회원가입 및 로그인을 진행합니다.")
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<ApiResponse> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.ok()
+                .body(new ApiResponse(HttpStatus.OK.value(), "유저 정보를 삭제했습니다.", null));
     }
 }

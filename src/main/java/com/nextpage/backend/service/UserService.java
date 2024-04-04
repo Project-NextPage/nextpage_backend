@@ -21,14 +21,26 @@ public class UserService {
         String nickname = request.getNickname();
         if (userRepository.existsByEmail(email)) { // 이미 존재하는 이메일이면 유저 생성 x
             throw new RuntimeException("이미 존재하는 이메일입니다.");
-        } else if (userRepository.existsByNickname(nickname)) {
-            throw new RuntimeException("중복된 닉네임입니다.");
         }
         User newUser = new User(); // 유저 생성
         newUser.setEmail(email);
         newUser.setNickname(nickname);
         newUser.setCreatedAt(LocalDateTime.now());
         newUser = userRepository.save(newUser); // db에 유저 저장 - 회원 가입
-        return new UserResponseDTO(newUser);
+        return updateUser(newUser.getId(), newUser.getNickname());
+    }
+
+    public UserResponseDTO updateUser(Long id, String nickname) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));
+        user.update(nickname + "#" + user.getId());
+        userRepository.save(user);
+        return new UserResponseDTO(user);
+    }
+
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));
+        userRepository.delete(user);
     }
 }
