@@ -1,5 +1,6 @@
 package com.nextpage.backend.service;
 
+
 import com.nextpage.backend.config.jwt.TokenService;
 import com.nextpage.backend.dto.request.StorySaveRequest;
 import com.nextpage.backend.dto.response.ScenarioResponseDTO;
@@ -13,9 +14,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 
@@ -24,9 +25,7 @@ public class StoryService {
     private final StoryRepository storyRepository;
     private final OpenAiService openAiService;
     private final ImageService imageService;
-
     private final TokenService tokenService;
-
     private final UserRepository userRepository;
 
     public StoryService(StoryRepository storyRepository, OpenAiService openAiService, ImageService imageService, TokenService tokenService, UserRepository userRepository) {
@@ -36,6 +35,7 @@ public class StoryService {
         this.tokenService = tokenService;
         this.userRepository = userRepository;
     }
+
     public List<Story> getRootStories() { // parentId가 없는 루트 스토리들 조회
         return storyRepository.findRootStories();
     }
@@ -95,8 +95,7 @@ public class StoryService {
             } else storyRepository.save(story);
         } else throw new RuntimeException("이미지 업로드에 실패했습니다.");
     }
-
-
+  
     public List<ScenarioResponseDTO> getStoriesByRootId(Long rootId) { //시나리오 조회
         List<Story> result= storyRepository.findAllChildrenByRootId(rootId); //시나리오 조회
         List<ScenarioResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
@@ -149,5 +148,4 @@ public class StoryService {
                     return Mono.just("Error or default image URL");
                 });
     }
-
 }
