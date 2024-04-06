@@ -3,10 +3,12 @@ package com.nextpage.backend.repository;
 import com.nextpage.backend.entity.Story;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface StoryRepository extends Neo4jRepository<Story,Long> {
 
     // 부모 관계가 없는 스토리(루트 스토리) 찾기
@@ -25,4 +27,8 @@ public interface StoryRepository extends Neo4jRepository<Story,Long> {
     // 특정 분기 조회를 위한 해당 스토리의 부모 재귀적으로 가져오기
     @Query("MATCH p=(child:Story)<-[:PARENT_OF*0..]-(parent:Story) WHERE ID(child) = $storyId RETURN nodes(p)")
     List<Story> findRecursivelyByLeafId(Long storyId);
+
+
+    @Query("MATCH (s:Story {userNickname: $nickname}) RETURN s")
+    List<Story> findStoriesByNickname(String nickname);
 }

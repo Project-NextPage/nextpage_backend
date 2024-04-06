@@ -11,7 +11,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 @Service
@@ -30,9 +32,13 @@ public class TokenService {
         secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
     }
 
-    public String generateToken(String name, String email) {
-        Claims claims = Jwts.claims().setSubject(email);
-        claims.put("name", name);
+    public String generateToken(Long userId, String email, String name) {
+        Claims claims = Jwts.claims().setSubject(String.valueOf(userId));
+        claims.put("email", email);
+
+        // 사용자의 이름을 Base64형식에서 UTF-8로 인코딩
+        String encodedName = Base64.getEncoder().encodeToString(name.getBytes(StandardCharsets.UTF_8));
+        claims.put("name", encodedName);
 
         return Jwts.builder().setClaims(claims)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
