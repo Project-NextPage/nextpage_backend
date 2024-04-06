@@ -1,13 +1,14 @@
 package com.nextpage.backend.entity;
 
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-@NoArgsConstructor
+@RequiredArgsConstructor
+@Setter
 @Getter
 @Entity
 @Table(name = "\"users\"")
@@ -21,7 +22,7 @@ public class User {
     @Column(name = "\"email\"", unique = true, nullable = false)
     private String email;
 
-    @Column(name = "\"nickname\"", nullable = false)
+    @Column(name = "\"nickname\"", unique = true, nullable = false)
     private String nickname;
 
     @Column(name = "\"createdAt\"", nullable = false)
@@ -32,19 +33,6 @@ public class User {
 
     @Column(name = "\"isDeleted\"", nullable = false)
     private boolean isDeleted;
-
-    @Builder // 빌더 패턴 구현
-    public User(String email, String nickname) {
-        this.email = email;
-        this.nickname = nickname;
-        this.createdAt = LocalDateTime.now(); // 현재 시간
-    }
-
-    public User updateGoogle(String nickname) { // 구글 소셜 로그인 시에 사용
-        this.nickname = nickname;
-
-        return this;
-    }
 
     public User update(String nickname) { // 프로필 수정 시 사용
         this.nickname = nickname;

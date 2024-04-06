@@ -1,7 +1,6 @@
 package com.nextpage.backend.config.auth.service;
 
 import com.nextpage.backend.config.auth.dto.OAuth2Attributes;
-import com.nextpage.backend.entity.User;
 import com.nextpage.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -39,24 +38,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         // OAuth2UserService를 통해 가져온 OAuth2User의 attribute 등을 담을 클래스
         OAuth2Attributes attributes = OAuth2Attributes.of(registrationId, userNameAttributeName, oAuth2User.getAttributes());
 
-        // 사용자 저장 또는 업데이트
-        User user = saveOrUpdate(attributes);
-
         return new DefaultOAuth2User(
                 Collections.emptyList(), // 역할(관리자, 회원)이 들어가는 위치인데 우리는 역할이 없으니까 빈리스트를 넣어줌
                 attributes.getAttributes(),
                 attributes.getNameAttributeKey());
-    }
-
-    private User saveOrUpdate(OAuth2Attributes attributes) {
-        User user = userRepository.findByEmail(attributes.getEmail())
-                // 구글 사용자 정보 업데이트(이미 가입된 사용자) => 업데이트
-
-                .map(entity -> entity.update(attributes.getName()))
-
-                // 가입되지 않은 사용자 => User 엔티티 생성
-                .orElse(attributes.toEntity());
-        // 생성해서 DB에 등록(회원가입)
-        return userRepository.save(user);
     }
 }
