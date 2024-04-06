@@ -1,48 +1,29 @@
 package com.nextpage.backend.service;
 
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.nextpage.backend.dto.request.StorySaveRequest;
 import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.ByteArrayInputStream;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 
 @Service
 public class StoryService {
-    private static final Logger logger = LoggerFactory.getLogger(StoryService.class);
-
     private final StoryRepository storyRepository;
-    private final AmazonS3 amazonS3;
-    private final WebClient webClient;
     private final OpenAiService openAiService;
+    private final ImageService imageService;
 
-    @Value("${AWS_BUCKET}")
-    private String bucketName;
-
-    public StoryService(AmazonS3 amazonS3, StoryRepository storyRepository, WebClient.Builder webClientBuilder, OpenAiService openAiService) {
-        this.amazonS3 = amazonS3;
+    public StoryService(StoryRepository storyRepository, OpenAiService openAiService, ImageService imageService) {
         this.storyRepository = storyRepository;
-        this.webClient = webClientBuilder.build();
         this.openAiService = openAiService;
+        this.imageService = imageService;
     }
 
     public List<Story> getRootStories() { // parentId가 없는 루트 스토리들 조회
@@ -72,7 +53,7 @@ public class StoryService {
 
     // 스토리 생성 메서드
     public void generateStory(StorySaveRequest request, Long parentId) {
-        String s3Url = uploadImageToS3(request.getImageUrl());
+        String s3Url = imageService.uploadImageToS3(request.getImageUrl());
         if (s3Url != null) {
             Story story = request.toEntity();
             story.setContent(request.getContent());
@@ -93,48 +74,6 @@ public class StoryService {
                 } else throw new RuntimeException("Parent story not found");
             } else storyRepository.save(story);
         } else throw new RuntimeException("이미지 업로드에 실패했습니다.");
-    }
-
-    // 이미지 다운로드 후 S3에 업로드
-    public String uploadImageToS3(String imageUrl) {
-        try {
-            byte[] imageBytes = downloadImage(imageUrl);
-            if (imageBytes == null) {
-                logger.error("Failed to download image from URL: {}", imageUrl);
-                return null;
-            }
-            String fileName = System.currentTimeMillis() + ".webp";
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(imageBytes);
-            ObjectMetadata metadata = new ObjectMetadata();
-            metadata.setContentLength(imageBytes.length);
-            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, fileName, inputStream, metadata);
-            amazonS3.putObject(putObjectRequest);
-            return amazonS3.getUrl(bucketName, fileName).toString();
-        } catch (Exception e) {
-            logger.error("Image upload failed. Cause: {}", e.getMessage(), e);
-            throw new RuntimeException("이미지 업로드에 실패했습니다. 원인: " + e.getMessage(), e);
-        }
-    }
-
-    // 이미지 다운로드 및 변환
-    private byte[] downloadImage(String imageUrl) {
-        logger.info("Original URL: {}", imageUrl);
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(imageUrl))
-                .build();
-
-        try {
-            HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
-            int statusCode = response.statusCode();
-            if (statusCode >= 400) {
-                throw new RuntimeException("Error fetching image. Status: " + statusCode);
-            }
-            return response.body();
-        } catch (Exception e) {
-            logger.error("Failed to download image. URL: {}, Error: {}", imageUrl, e.getMessage(), e);
-            return null;
-        }
     }
 
     public List<ScenarioResponseDTO> getStoriesById(Long storyId, boolean isRoot) { //시나리오 조회와 특정 분기 조회
@@ -182,5 +121,4 @@ public class StoryService {
                     return Mono.just("Error or default image URL");
                 });
     }
-
 }
