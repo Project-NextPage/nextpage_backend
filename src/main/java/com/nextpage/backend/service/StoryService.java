@@ -3,13 +3,17 @@ package com.nextpage.backend.service;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.nextpage.backend.config.jwt.TokenService;
 import com.nextpage.backend.dto.request.StorySaveRequest;
 import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.dto.response.StoryListResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
+import com.nextpage.backend.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -36,14 +40,20 @@ public class StoryService {
     private final WebClient webClient;
     private final OpenAiService openAiService;
 
+    private final TokenService tokenService;
+
+    private final UserRepository userRepository;
+
     @Value("${AWS_BUCKET}")
     private String bucketName;
 
-    public StoryService(AmazonS3 amazonS3, StoryRepository storyRepository, WebClient.Builder webClientBuilder, OpenAiService openAiService) {
+    public StoryService(AmazonS3 amazonS3, StoryRepository storyRepository, WebClient.Builder webClientBuilder, OpenAiService openAiService,TokenService tokenService,UserRepository userRepository) {
         this.amazonS3 = amazonS3;
         this.storyRepository = storyRepository;
         this.webClient = webClientBuilder.build();
         this.openAiService = openAiService;
+        this.tokenService = tokenService;
+        this.userRepository = userRepository;
     }
 
     public List<Story> getRootStories() { // parentId가 없는 루트 스토리들 조회
@@ -72,15 +82,25 @@ public class StoryService {
     }
 
     // 스토리 생성 메서드
-    public void generateStory(StorySaveRequest request, Long parentId) {
+    public void generateStory(StorySaveRequest request, Long parentId, HttpServletRequest httpServletRequest) {
         String s3Url = uploadImageToS3(request.getImageUrl());
         if (s3Url != null) {
+            // 요청에서 토큰 추출
+            String token = tokenService.resolveToken(httpServletRequest);
+            // 토큰에서 userId 추출
+            Long userId = tokenService.getUserIdFromToken(token);
+            // userId를 사용하여 닉네임 조회
+            Optional<String> userNicknameOpt = userRepository.findNicknameById(userId);
+
+            // Optional<String> 처리
+            String userNickname = userNicknameOpt.orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
             Story story = request.toEntity();
             story.setContent(request.getContent());
             story.setCreatedAt(LocalDateTime.now());
             story.setUpdatedAt(LocalDateTime.now());
             story.setIsDeleted(false);
-            story.setUserNickname("test");
+            story.setUserNickname(userNickname);
 
             if (parentId != null) {
                 // 부모 노드가 있는 경우
