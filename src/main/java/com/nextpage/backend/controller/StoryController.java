@@ -7,6 +7,7 @@ import com.nextpage.backend.service.StoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -74,9 +75,11 @@ public class StoryController {
 
     @Operation(summary = "스토리 생성", description = "새로운 스토리를 생성합니다.")
     @PostMapping()
-    public ResponseEntity<ApiResponse> createStory(@RequestBody StorySaveRequest storyRequest, @RequestParam(required = false) Long parentId) {
+    public ResponseEntity<ApiResponse> createStory(@RequestBody StorySaveRequest storyRequest,
+                                                   @RequestParam(required = false) Long parentId,
+                                                   HttpServletRequest request) {
         try {
-            storyService.generateStory(storyRequest, parentId);
+            storyService.generateStory(storyRequest, parentId, request);
             // 스토리 생성 성공 응답
             return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(201, "스토리 생성을 완료했습니다.", null));
         } catch (Exception e) {
