@@ -7,11 +7,14 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 
 import com.sksamuel.scrimage.webp.WebpWriter;
+import net.coobird.thumbnailator.Thumbnails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.net.URI;
@@ -41,10 +44,29 @@ public class ImageService {
                 logger.error("Failed to download image from URL: {}", imageUrl);
                 return null;
             }
-            // Scrimage 라이브러리를 사용하여 이미지를 WebP로 변환하고 파일로 저장
-            ImmutableImage image = ImmutableImage.loader().fromFile(imageFile);
-            File outputFile = new File(imageFile.getParent(), System.currentTimeMillis() + ".webp");
+
+            // 원본 파일 크기 출력
+            logger.info("원본 파일 크기 : " + imageFile.length() + " bytes");
+
+            // Thumbnailator 라이브러리를 사용하여 이미지 리사이징
+            BufferedImage resizedImage = Thumbnails.of(imageFile)
+                    .size(512, 512)
+                    .asBufferedImage();
+
+            // 리사이징된 BufferedImage를 임시 파일로 저장
+            File tempFile = new File(imageFile.getParent(), "temp_" + System.currentTimeMillis() + ".png");
+            ImageIO.write(resizedImage, "png", tempFile);
+
+            // 임시 파일 크기 출력
+            logger.info("리사이징 후 크기 : " + tempFile.length() + " bytes");
+
+            // Scrimage 라이브러리를 사용하여 리사이징된 이미지를 WebP로 변환하고 파일로 저장
+            ImmutableImage image = ImmutableImage.loader().fromFile(tempFile);
+            File outputFile = new File(tempFile.getParent(), System.currentTimeMillis() + ".webp");
             image.output(WebpWriter.DEFAULT, outputFile);
+
+            // 변환된 WebP 파일 크기 출력
+            logger.info("리사이징 + Webp 적용 후 크기 : " + outputFile.length() + " bytes");
 
             // 파일의 길이를 가져와서 메타데이터에 설정
             ObjectMetadata metadata = new ObjectMetadata();
