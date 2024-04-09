@@ -65,6 +65,9 @@ dependencies {
 	// Webp
 	implementation 'com.sksamuel.scrimage:scrimage-core:4.1.1'
 	implementation 'com.sksamuel.scrimage:scrimage-webp:4.1.1'
+
+	// thumbnailator
+	implementation 'net.coobird:thumbnailator:0.4.14'
 }
 
 tasks.named('test') {
