@@ -4,7 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.List;
@@ -22,7 +21,7 @@ public class OpenAiService {
         this.apiKey = apiKey;
     }
 
-    public Mono<String> generateImage(String content) {
+    public String generateImage(String content) {
         String promptKeyword = "Design: a detailed digital illustration drawn with bright colors and clean lines. Please make the following images according to the previous requirements: ";
         String conditions = "When generating an image, be sure to observe the following conditions: Do not add text to the image. I want an illustration image, not contain text in the image";
 
@@ -44,7 +43,8 @@ public class OpenAiService {
                 .bodyValue(requestBody)
                 .retrieve()
                 .bodyToMono(Map.class)
-                .map(response -> extractImageUrl(response));
+                .map(response -> extractImageUrl(response))
+                .block();
     }
 
     private String extractImageUrl(Map<String, Object> response) {

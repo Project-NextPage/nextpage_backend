@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +36,7 @@ public class StoryController {
         try {
             List<Story> rootStories = storyService.getRootStories();
             if (rootStories.isEmpty()) {
+                // 상태 코드는 헤더에 있음.
                 return ResponseEntity.ok()
                         .body(new ApiResponse(404, "루트 스토리가 없습니다.", null));
             }
@@ -75,7 +77,8 @@ public class StoryController {
 
     @Operation(summary = "스토리 생성", description = "새로운 스토리를 생성합니다.")
     @PostMapping()
-    public ResponseEntity<ApiResponse> createStory(@RequestBody StorySaveRequest storyRequest,
+    // todo @Valid 잊지 말기
+    public ResponseEntity<ApiResponse> createStory(@RequestBody @Valid StorySaveRequest storyRequest,
                                                    @RequestParam(required = false) Long parentId,
                                                    HttpServletRequest request) {
         try {

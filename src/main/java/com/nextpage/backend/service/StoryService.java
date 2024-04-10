@@ -7,6 +7,7 @@ import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.dto.response.StoryListResponseDTO;
 import com.nextpage.backend.entity.Story;
+import com.nextpage.backend.exception.NotFoundStoryException;
 import com.nextpage.backend.repository.StoryRepository;
 import com.nextpage.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -105,7 +106,7 @@ public class StoryService {
                 story.setParentId(parentStory);
                 storyRepository.save(parentStory);
                 //todo  sonar lint plugin
-            } else throw new RuntimeException("Parent story not found");
+            } else throw new NotFoundStoryException();
         } else storyRepository.save(story);
     }
   

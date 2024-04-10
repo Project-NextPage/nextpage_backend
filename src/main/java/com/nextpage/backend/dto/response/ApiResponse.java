@@ -8,7 +8,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApiResponse {
-    private int code;
+    private String code;
+    // todo
+    // user:USER001 - notion USER0001은 찾을 수 없음.
     private String message;
     private Object data;
 }
