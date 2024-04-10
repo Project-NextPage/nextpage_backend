@@ -8,6 +8,7 @@ import com.nextpage.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -41,9 +42,9 @@ public class UserController {
     }
 
     @Operation(summary = "토큰으로 사용자 조회 API", description = "토큰을 통해 사용자 정보를 조회합니다.")
-    @Parameter(name = "token", description = "토큰")
-    @GetMapping("/{token}") // 시나리오 조회
-    public ResponseEntity<ApiResponse> getUserByToken(@PathVariable String token) {
+    @GetMapping("/details") // 토큰으로 사용자 조회
+    public ResponseEntity<ApiResponse> getUserByToken(HttpServletRequest request) {
+        String token = tokenService.resolveToken(request);
         Long userId = tokenService.getUserIdFromToken(token);
         UserResponseDTO userResponseDTO = userService.getUserInfo(userId);
         return ResponseEntity.ok()

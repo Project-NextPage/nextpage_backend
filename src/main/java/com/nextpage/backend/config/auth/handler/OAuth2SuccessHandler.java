@@ -39,7 +39,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             name = user.get().getNickname();
         }
 
-        String token = tokenService.generateToken(userId, email, name);
+        String token = tokenService.generateToken(userId);
 
         String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth2/redirect")
         .queryParam("token", token)
