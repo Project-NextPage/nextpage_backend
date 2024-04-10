@@ -31,6 +31,12 @@ public class MypageController {
     @Parameter(name = "nickname", description = "조회할 스토리들의 작성자 닉네임")
     @GetMapping("/mystories/{nickname}") // 특정 분기 조회
     public ResponseEntity<ApiResponse> getStoriesByNickname(@PathVariable String nickname) {
+        /*
+            TODO
+            controller에서는 validation 혹은 dto mapping 정도만 하는 것이 좋습니다.
+            작성자 글이 존재하지 않는 것은 비지니스 로직이므로 service layer로 내리는 것이 적합해 보입니다!
+            아예 예외를 던져버리는 것도 좋습니다.
+         */
         List<StoryListResponseDTO> storiesByNickname = mypageService.getStoriesByNickname(nickname);
         if (storiesByNickname.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

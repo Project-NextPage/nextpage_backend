@@ -64,36 +64,49 @@ public class StoryService {
     // 스토리 생성 메서드
     public void generateStory(StorySaveRequest request, Long parentId, HttpServletRequest httpServletRequest) {
         String s3Url = imageService.uploadImageToS3(request.getImageUrl());
-        if (s3Url != null) {
-            // 요청에서 토큰 추출
-            String token = tokenService.resolveToken(httpServletRequest);
-            // 토큰에서 userId 추출
-            Long userId = tokenService.getUserIdFromToken(token);
-            // userId를 사용하여 닉네임 조회
-            Optional<String> userNicknameOpt = userRepository.findNicknameById(userId);
+        // 불필요한 else 문은 모두 제거 해주세요.
+        // 가독성을 저해합니다.
+        // codemetrix라는 intellij plugin을 쓰는 것도 좋습니다.
+        // 아래와 같이 짜면 더 좋습니다.
+        if (s3Url == null){
+            // 예외 커스텀하기
+            // 예외 이야기 나온 김에 GlobalExceptionHandler에 대해 알아보세요.
+            throw new RuntimeException("이미지 업로드에 실패했습니다.");
+        }
+        // 요청에서 토큰 추출
+        String token = tokenService.resolveToken(httpServletRequest);
+        // 토큰에서 userId 추출
+        Long userId = tokenService.getUserIdFromToken(token);
+        // userId를 사용하여 닉네임 조회
+        Optional<String> userNicknameOpt = userRepository.findNicknameById(userId);
 
-            // Optional<String> 처리
-            String userNickname = userNicknameOpt.orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        // Optional<String> 처리
+        String userNickname = userNicknameOpt.orElseThrow(() -> new UsernameNotFoundException("User not found.orElseThrow(() -> n"));
 
-            Story story = request.toEntity();
-            story.setContent(request.getContent());
-            story.setCreatedAt(LocalDateTime.now());
-            story.setUpdatedAt(LocalDateTime.now());
-            story.setIsDeleted(false);
-            story.setUserNickname(userNickname);
+        Story story = request.toEntity();
+            /*
+                set을 사용하는 거는 매우 좋지 않습니다.
+                언제 어떤 목적으로 변경을 했는지 모호해지기 때문입니다.
+                생성자를 통해 한번에 생성 하는 것이 좋고 set을 지양해야만합니다.
+             */
+        story.setContent(request.getContent());
+        story.setCreatedAt(LocalDateTime.now());
+        story.setUpdatedAt(LocalDateTime.now());
+        story.setIsDeleted(false);
+        story.setUserNickname(userNickname);
 
-            if (parentId != null) {
-                // 부모 노드가 있는 경우
-                Optional<Story> parentStoryOptional = storyRepository.findById(parentId);
-                if (parentStoryOptional.isPresent()) {
-                    Story parentStory = parentStoryOptional.get();
-                    // 부모 노드와 연결
-                    parentStory.getChildId().add(story);
-                    story.setParentId(parentStory);
-                    storyRepository.save(parentStory);
-                } else throw new RuntimeException("Parent story not found");
-            } else storyRepository.save(story);
-        } else throw new RuntimeException("이미지 업로드에 실패했습니다.");
+        if (parentId != null) {
+            // 부모 노드가 있는 경우
+            Optional<Story> parentStoryOptional = storyRepository.findById(parentId);
+            if (parentStoryOptional.isPresent()) {
+                Story parentStory = parentStoryOptional.get();
+                // 부모 노드와 연결
+                parentStory.getChildId().add(story);
+                story.setParentId(parentStory);
+                storyRepository.save(parentStory);
+                //todo  sonar lint plugin
+            } else throw new RuntimeException("Parent story not found");
+        } else storyRepository.save(story);
     }
   
     public List<ScenarioResponseDTO> getStoriesByRootId(Long rootId) { //시나리오 조회
@@ -143,8 +156,8 @@ public class StoryService {
         // OpenAiService를 통해 이미지 생성 요청 후 URL 반환
         return openAiService.generateImage(promptImage)
                 .onErrorResume(e -> {
-                    // 에러 처리 로직. 예를 들어, 로깅하거나 기본 이미지 URL 반환
-                    System.err.println("Error generating image: " + e.getMessage());
+                    // 에러 처리 로직. 예를 들어, 로깅하거나 기본 이미지 URL
+                    // pringln은 절대 쓰면 안됩니다. log4j를 사용해주세요.
                     return Mono.just("Error or default image URL");
                 });
     }

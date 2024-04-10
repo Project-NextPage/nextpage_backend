@@ -33,7 +33,11 @@ public class OpenAiService {
         requestBody.put("n", 1);
         requestBody.put("size", "1024x1024");
         requestBody.put("model", "dall-e-3"); // 모델 버전 지정
-
+        /* todo
+            webclient를 사용한 이유가 있나요? feign client나 rest template 같은 선택지도 있습니다.
+            고민 해보고 관련 글을 블로그로 작성하면 좋습니다.
+            ps.. 사실 webclient를 사용 하는 것은 좋은 방법이지만.. 기술을 선택한 이유도 알아두면 좋아서 코멘트 남깁니다.
+         */
         return this.webClient.post()
                 .uri("/images/generations")
                 .header("Authorization", "Bearer " + this.apiKey)
