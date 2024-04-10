@@ -5,6 +5,7 @@ import com.nextpage.backend.dto.response.UserResponseDTO;
 import com.nextpage.backend.entity.User;
 import com.nextpage.backend.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.webjars.NotFoundException;
 
 import java.time.LocalDateTime;
 
@@ -42,5 +43,11 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));
         userRepository.delete(user);
+    }
+
+    public UserResponseDTO getUserInfo(Long id){
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));
+        return new UserResponseDTO(user);
     }
 }
