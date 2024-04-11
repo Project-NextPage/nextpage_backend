@@ -63,12 +63,11 @@ public class StoryService {
 
     // 스토리 생성 메서드
     public void generateStory(StorySaveRequest request, Long parentId, HttpServletRequest httpServletRequest) {
+        tokenService.validateAccessToken(tokenService.resolveAccessToken(httpServletRequest)); // 만료 검사
         String s3Url = imageService.uploadImageToS3(request.getImageUrl());
         if (s3Url != null) {
-            // 요청에서 토큰 추출
-            String token = tokenService.resolveToken(httpServletRequest);
             // 토큰에서 userId 추출
-            Long userId = tokenService.getUserIdFromToken(token);
+            Long userId = tokenService.getUserIdFromToken(httpServletRequest);
             // userId를 사용하여 닉네임 조회
             Optional<String> userNicknameOpt = userRepository.findNicknameById(userId);
 

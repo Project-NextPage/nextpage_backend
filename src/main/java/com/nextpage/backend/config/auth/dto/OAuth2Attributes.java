@@ -12,7 +12,7 @@ public class OAuth2Attributes {
     private String nameAttributeKey;
     private String name;
     private String email;
-//    private String pictureURL; // 구글 프로필 사진도 가져올 수 있음
+//    private String pictureURL; // 프로필 사진도 가져올 수 있음
 
     @Builder
     public OAuth2Attributes(Map<String, Object> attributes,
@@ -29,7 +29,7 @@ public class OAuth2Attributes {
                                      String userNameAttributeName,
                                      Map<String, Object> attributes) {
 
-        if("naver".equals(registrationId)){
+        if ("naver".equals(registrationId)){
             return ofNaver("id", attributes);
         }
 

@@ -1,9 +1,11 @@
 package com.nextpage.backend.service;
 
+import com.nextpage.backend.config.jwt.TokenService;
 import com.nextpage.backend.dto.request.UserCreateRequest;
 import com.nextpage.backend.dto.response.UserResponseDTO;
 import com.nextpage.backend.entity.User;
 import com.nextpage.backend.repository.UserRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 import org.webjars.NotFoundException;
 
@@ -12,9 +14,11 @@ import java.time.LocalDateTime;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final TokenService tokenService;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, TokenService tokenService) {
         this.userRepository = userRepository;
+        this.tokenService = tokenService;
     }
 
     public UserResponseDTO createUser(UserCreateRequest request) {
@@ -45,8 +49,10 @@ public class UserService {
         userRepository.delete(user);
     }
 
-    public UserResponseDTO getUserInfo(Long id){
-        User user = userRepository.findById(id)
+    public UserResponseDTO getUserInfo(HttpServletRequest request){
+        tokenService.validateAccessToken(tokenService.resolveAccessToken(request)); // 만료 검사
+        Long userId = tokenService.getUserIdFromToken(request);
+        User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));
         return new UserResponseDTO(user);
     }

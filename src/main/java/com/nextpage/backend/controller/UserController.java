@@ -41,15 +41,20 @@ public class UserController {
                 .body(new ApiResponse(HttpStatus.OK.value(), "유저 정보를 삭제했습니다.", null));
     }
 
+    @Operation(summary = "액세스 토큰 재발급", description = "리프레쉬 토큰을 검사해 액세스 토큰 재발급 요청을 처리합니다.")
+    @PostMapping("/auth/token")
+    public ResponseEntity<ApiResponse> reGenerateAccessToken(HttpServletRequest request) {
+        // 이 때 받은 토큰은 refresh 토큰
+        String accessToken = tokenService.reGenereteAccessToken(request);
+        return ResponseEntity.ok()
+                .body(new ApiResponse(HttpStatus.OK.value(), "새로운 액세스 토큰 발급 완료", accessToken));
+    }
+
     @Operation(summary = "토큰으로 사용자 조회 API", description = "토큰을 통해 사용자 정보를 조회합니다.")
     @GetMapping("/details") // 토큰으로 사용자 조회
     public ResponseEntity<ApiResponse> getUserByToken(HttpServletRequest request) {
-        String token = tokenService.resolveToken(request);
-        Long userId = tokenService.getUserIdFromToken(token);
-        UserResponseDTO userResponseDTO = userService.getUserInfo(userId);
+        UserResponseDTO userResponseDTO = userService.getUserInfo(request);
         return ResponseEntity.ok()
                 .body(new ApiResponse(HttpStatus.OK.value(), "조회 완료." , userResponseDTO));
-
-
     }
 }
