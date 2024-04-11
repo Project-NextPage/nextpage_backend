@@ -32,13 +32,13 @@ public class TokenService {
         secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
     }
 
-    public String generateToken(Long userId, String email, String name) {
+    public String generateToken(Long userId) {
         Claims claims = Jwts.claims().setSubject(String.valueOf(userId));
-        claims.put("email", email);
-
-        // 사용자의 이름을 Base64형식에서 UTF-8로 인코딩
-        String encodedName = Base64.getEncoder().encodeToString(name.getBytes(StandardCharsets.UTF_8));
-        claims.put("name", encodedName);
+//        claims.put("email", email);
+//
+//        // 사용자의 이름을 Base64형식에서 UTF-8로 인코딩
+//        String encodedName = Base64.getEncoder().encodeToString(name.getBytes(StandardCharsets.UTF_8));
+//        claims.put("name", encodedName);
 
         return Jwts.builder().setClaims(claims)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
