@@ -5,7 +5,6 @@ import com.nextpage.backend.entity.User;
 import com.nextpage.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -17,11 +16,15 @@ import java.io.IOException;
 import java.util.Optional;
 
 @Slf4j
-@RequiredArgsConstructor
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
     private final TokenService tokenService;
     private final UserRepository userRepository;
+
+    public OAuth2SuccessHandler(TokenService tokenService, UserRepository userRepository) {
+        this.tokenService = tokenService;
+        this.userRepository = userRepository;
+    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response
@@ -29,21 +32,24 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
         OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
         String email = oAuth2User.getAttribute("email");
-        String name = oAuth2User.getAttribute("name");
 
         Optional<User> user = userRepository.findByEmail(email);
         Long userId = null;
+        String targetUrl;
 
-        if (user.isPresent()) {
+        if (user.isPresent()) { // 기존 회원인 경우 액세스, 리프레시 토큰 생성 후 전달
             userId = user.get().getId();
-            name = user.get().getNickname();
+            String accessToken = tokenService.generateAccessToken(userId);
+            String refreshToken = tokenService.generateRefreshToken();
+
+            targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth2/redirect")
+                    .queryParam("a", accessToken).queryParam("r", refreshToken)
+                    .build().toUriString();
+        } else { // 신규 회원인 경우 회원가입 페이지로 이동
+            targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/login")
+                    .queryParam("e", email)
+                    .build().toUriString();
         }
-
-        String token = tokenService.generateToken(userId);
-
-        String targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth2/redirect")
-        .queryParam("token", token)
-        .build().toUriString();
 
         getRedirectStrategy().sendRedirect(request, response, targetUrl);
     }

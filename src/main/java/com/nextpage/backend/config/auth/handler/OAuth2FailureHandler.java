@@ -13,10 +13,9 @@ import java.io.IOException;
 @Slf4j
 @Component
 public class OAuth2FailureHandler implements AuthenticationFailureHandler {
-    // 인증 실패 시 프론트의 홈으로 redirect
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
-        // 인증 실패시 메인 페이지로 이동
+        // 인증 실패 시 아래 주소로 리다이렉트
         response.sendRedirect("http://localhost:3000/login/fail");
     }
 }
