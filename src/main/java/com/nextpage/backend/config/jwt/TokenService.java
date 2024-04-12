@@ -69,7 +69,9 @@ public class TokenService {
     }
 
     public String resolveAccessToken(HttpServletRequest request) {
-        return request.getHeader("ACCESS-TOKEN");
+        String header = request.getHeader("AUTHORIZATION");
+        String token = header.substring("Bearer ".length()); // Bearer 을 제외한 문자열 반환
+        return token;
     }
 
     public String resolveRefreshToken(HttpServletRequest request) {
