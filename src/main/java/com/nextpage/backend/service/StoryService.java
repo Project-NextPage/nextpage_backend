@@ -47,30 +47,34 @@ public class StoryService {
                         story.getCreatedAt()
                 ))
                 .collect(Collectors.toList()); // 루트 스토리 목록 리스트 생성
-        if (rootStoriesList.isEmpty()) { throw new RuntimeException("스토리가 존재하지 않습니다."); }
+        if (rootStoriesList.isEmpty()) { throw new NoSuchElementException("스토리가 존재하지 않습니다."); }
 
         return rootStoriesList;
     }
 
     public StoryDetailsResponseDTO getStoryDetails(Long storyId) { // 스토리 상세 조회
-        // storyId로 스토리 찾기
-        Story story = storyRepository.findById(storyId).orElseThrow(() -> new NoSuchElementException("해당 ID의 스토리를 찾을 수 없습니다 [id: " + storyId + "]"));
-
+        Story story = storyRepository.findById(storyId)
+                .orElseThrow(() -> new NoSuchElementException("해당 ID의 스토리를 찾을 수 없습니다 [id: " + storyId + "]"));
+        Long parentId = story.getParentId() != null ? story.getParentId().getId() : null;
         // 스토리 내용을 포함한 응답 객체 생성
-        StoryDetailsResponseDTO responseDTO = new StoryDetailsResponseDTO();
-        responseDTO.setId(story.getId());
-        responseDTO.setContent(story.getContent());
-        responseDTO.setImageUrl(story.getImageUrl());
-        responseDTO.setUserNickname(story.getUserNickname());
+        StoryDetailsResponseDTO storyDetails = new StoryDetailsResponseDTO(
+                story.getId(),
+                story.getContent(),
+                story.getImageUrl(),
+                story.getUserNickname(),
+                parentId,
+                getChildIds(story),
+                getChildContents(story)
+        );
+        return storyDetails;
+    }
 
-        // 부모 자식 스토리의 ID와 content
-        responseDTO.setParentId(story.getParentId() != null ? story.getParentId().getId() : null);
-        List<Long> childIds = story.getChildId().stream().map(Story::getId).collect(Collectors.toList());
-        responseDTO.setChildId(childIds);
-        List<String> childContents = story.getChildId().stream().map(Story::getContent).collect(Collectors.toList());
-        responseDTO.setChildContent(childContents);
+    public List<Long> getChildIds(Story story) {
+        return story.getChildId().stream().map(Story::getId).collect(Collectors.toList());
+    }
 
-        return responseDTO;
+    public List<String> getChildContents(Story story) {
+        return story.getChildId().stream().map(Story::getContent).collect(Collectors.toList());
     }
 
     // 스토리 생성 메서드

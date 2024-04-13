@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 
 
 @Tag(name = "Stories", description = "Story 관리")
@@ -38,18 +37,10 @@ public class StoryController {
     @Operation(summary = "스토리 상세 조회", description = "단일 스토리의 상세 내용을 조회합니다.")
     @Parameter(name = "storyId", description = "조회할 스토리 아이디")
     @GetMapping("/details/{storyId}") // 스토리 상세 조회
-    public ResponseEntity<?> getStoryDetails(@PathVariable("storyId") Long storyId) {
-        try {
-            StoryDetailsResponseDTO storyDetails = storyService.getStoryDetails(storyId);
-            return ResponseEntity.ok()
-                    .body(new ApiResponse(200, "스토리를 정상적으로 조회 했습니다. [id: " + storyDetails.getId() + "]", storyDetails));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse(404, e.getMessage(), null));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse(500, "스토리 조회 중 오류가 발생했습니다.", null));
-        }
+    public ResponseEntity<ApiResponse> getStoryDetails(@PathVariable Long storyId) {
+        StoryDetailsResponseDTO storyDetails = storyService.getStoryDetails(storyId);
+        return ResponseEntity.ok()
+                .body(new ApiResponse(200, "스토리의 상세 내용을 조회했습니다.", storyDetails));
     }
 
     @Operation(summary = "스토리 생성", description = "새로운 스토리를 생성합니다.")
