@@ -2,7 +2,7 @@ package com.nextpage.backend.config.auth;
 
 import com.nextpage.backend.config.auth.handler.OAuth2FailureHandler;
 import com.nextpage.backend.config.auth.handler.OAuth2SuccessHandler;
-import com.nextpage.backend.config.auth.service.OAuth2UserService;
+import com.nextpage.backend.config.auth.service.CustomOAuth2UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -18,7 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity // spring security 설정들을 활성화
 public class SecurityConfig {
 
-    private final OAuth2UserService oAuth2UserService;
+    private final CustomOAuth2UserService customOAuth2UserService;
 //    private final TokenService tokenService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final OAuth2FailureHandler oAuth2FailureHandler;
@@ -38,7 +38,7 @@ public class SecurityConfig {
                 )	// 세션을 사용하지 않으므로 STATELESS 설정
                 .oauth2Login(oauth2Login -> oauth2Login
                         .userInfoEndpoint(userInfoEndpoint -> userInfoEndpoint
-                                .userService(oAuth2UserService)
+                                .userService(customOAuth2UserService)
                         )
                         .successHandler(oAuth2SuccessHandler)
                         .failureHandler(oAuth2FailureHandler)

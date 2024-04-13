@@ -34,7 +34,7 @@ public class TokenService {
         secretKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(SECRET_KEY));
     }
 
-    public String generateAccessToken(Long userId) { // todo: 액세스, 리프레시 토큰 생성 로직 구현
+    public String generateAccessToken(Long userId) { // 액세스, 리프레시 토큰 생성 로직 구현
         Claims claims = Jwts.claims().setSubject(String.valueOf(userId));
 
         return Jwts.builder().setClaims(claims)
@@ -54,18 +54,9 @@ public class TokenService {
     }
 
     public String reGenereteAccessToken(HttpServletRequest request) { // 액세스 토큰 재발급
-        String accessToken;
-        String refreshToken = resolveRefreshToken(request);
-
-        validateRefreshToken(refreshToken); // 만료 검사
-        Claims claims = Jwts.claims().setSubject(String.valueOf(getUserIdFromToken(request))); // id 정보 가져오기
-        accessToken = Jwts.builder().setClaims(claims)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXPIRE_LENGTH))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
-                .compact();
-
-        return accessToken;
+        Long id = getUserIdFromToken(request);
+        validateRefreshToken(request); // 만료 검사
+        return generateAccessToken(id);
     }
 
     public String resolveAccessToken(HttpServletRequest request) {
@@ -78,8 +69,9 @@ public class TokenService {
         return request.getHeader("REFRESH-TOKEN");
     }
 
-    public void validateAccessToken(String token) { // 만료 여부 반환
+    public void validateAccessToken(HttpServletRequest request) { // 만료 여부 반환
         try {
+            String token = resolveAccessToken(request);
             Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(secretKey)
                     .build().parseClaimsJws(token);
             claims.getBody().getExpiration().after(new Date(System.currentTimeMillis()));
@@ -89,8 +81,9 @@ public class TokenService {
         }
     }
 
-    public void validateRefreshToken(String token) {
+    public void validateRefreshToken(HttpServletRequest request) {
         try {
+            String token = resolveRefreshToken(request);
             Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(secretKey)
                     .build().parseClaimsJws(token);
             claims.getBody().getExpiration().after(new Date(System.currentTimeMillis()));

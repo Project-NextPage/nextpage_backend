@@ -7,7 +7,6 @@ import com.nextpage.backend.entity.User;
 import com.nextpage.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
-import org.webjars.NotFoundException;
 
 import java.time.LocalDateTime;
 
@@ -50,7 +49,7 @@ public class UserService {
     }
 
     public UserResponseDTO getUserInfo(HttpServletRequest request){
-        tokenService.validateAccessToken(tokenService.resolveAccessToken(request)); // 만료 검사
+        tokenService.validateAccessToken(request); // 만료 검사
         Long userId = tokenService.getUserIdFromToken(request);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));
