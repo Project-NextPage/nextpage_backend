@@ -6,9 +6,9 @@ import com.nextpage.backend.dto.response.ApiResponse;
 import com.nextpage.backend.dto.response.UserResponseDTO;
 import com.nextpage.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,7 +25,7 @@ public class UserController {
         this.tokenService = tokenService;
     }
 
-    @Operation(summary = "회원가입 및 로그인", description = "회원가입 및 로그인을 진행합니다.")
+    @Operation(summary = "회원가입", description = "유저를 생성합니다.")
     @PostMapping
     public ResponseEntity<ApiResponse> createUser(@RequestBody UserCreateRequest request) {
         UserResponseDTO user = userService.createUser(request);

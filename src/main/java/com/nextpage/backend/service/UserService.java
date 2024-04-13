@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.NoSuchElementException;
 
 @Service
 public class UserService {
@@ -24,7 +25,7 @@ public class UserService {
         String email = request.getEmail();
         String nickname = request.getNickname();
         if (userRepository.existsByEmail(email)) { // 이미 존재하는 이메일이면 유저 생성 x
-            throw new RuntimeException("이미 존재하는 이메일입니다.");
+            throw new NoSuchElementException("이미 존재하는 이메일입니다.");
         }
         User newUser = new User(); // 유저 생성
         newUser.setEmail(email);
@@ -36,7 +37,7 @@ public class UserService {
 
     public UserResponseDTO updateUser(Long id, String nickname) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 유저입니다."));
         user.update(nickname + "#" + user.getId());
         userRepository.save(user);
         return new UserResponseDTO(user);
@@ -44,7 +45,7 @@ public class UserService {
 
     public void deleteUser(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 유저입니다."));
         userRepository.delete(user);
     }
 
@@ -52,7 +53,7 @@ public class UserService {
         tokenService.validateAccessToken(request); // 만료 검사
         Long userId = tokenService.getUserIdFromToken(request);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("존재하지 않는 유저입니다."));
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 유저입니다."));
         return new UserResponseDTO(user);
     }
 }
