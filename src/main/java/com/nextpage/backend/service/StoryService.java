@@ -3,6 +3,7 @@ package com.nextpage.backend.service;
 
 import com.nextpage.backend.config.jwt.TokenService;
 import com.nextpage.backend.dto.request.StorySaveRequest;
+import com.nextpage.backend.dto.response.RootResponseDTO;
 import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.dto.response.StoryListResponseDTO;
@@ -16,7 +17,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.List;
 import java.util.stream.Collectors;
 
 
@@ -36,8 +36,20 @@ public class StoryService {
         this.userRepository = userRepository;
     }
 
-    public List<Story> getRootStories() { // parentId가 없는 루트 스토리들 조회
-        return storyRepository.findRootStories();
+    public List<RootResponseDTO> getRootStories() { // parentId가 없는 루트 스토리 목록 조회
+        List<Story> rootStories = storyRepository.findRootStories();
+        List<RootResponseDTO> rootStoriesList = rootStories.stream()
+                .map(story -> new RootResponseDTO(
+                        story.getId(),
+                        story.getUserNickname(),
+                        story.getContent(),
+                        story.getImageUrl(),
+                        story.getCreatedAt()
+                ))
+                .collect(Collectors.toList()); // 루트 스토리 목록 리스트 생성
+        if (rootStoriesList.isEmpty()) { throw new RuntimeException("스토리가 존재하지 않습니다."); }
+
+        return rootStoriesList;
     }
 
     public StoryDetailsResponseDTO getStoryDetails(Long storyId) { // 스토리 상세 조회

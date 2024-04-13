@@ -1,26 +1,23 @@
 package com.nextpage.backend.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-@Data
-@AllArgsConstructor
-@NoArgsConstructor
+@Getter
 public class RootResponseDTO {
-    private List<StoryInfo> stories;
+    private Long id;
+    private String userNickname;
+    private String content;
+    private String imageUrl;
+    private LocalDateTime createdAt;
 
-    @Data
-    @AllArgsConstructor
-    @NoArgsConstructor
-    public static class StoryInfo {
-        private Long id;
-        private String userNickname;
-        private String content;
-        private String imageUrl;
-        private LocalDateTime createdAt;
+    // 아래 코드는 @AllArgsConstructor로 대체 가능
+    public RootResponseDTO(Long id, String userNickname, String content, String imageUrl, LocalDateTime createdAt) {
+        this.id = id;
+        this.userNickname = userNickname;
+        this.content = content;
+        this.imageUrl = imageUrl;
+        this.createdAt = createdAt;
     }
 }

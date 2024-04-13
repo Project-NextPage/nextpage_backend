@@ -2,9 +2,7 @@ package com.nextpage.backend.dto.response;
 
 import com.nextpage.backend.entity.User;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
 @Getter
 public class UserResponseDTO {
     private Long id;
