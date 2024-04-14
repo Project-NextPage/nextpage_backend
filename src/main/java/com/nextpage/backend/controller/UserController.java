@@ -3,6 +3,7 @@ package com.nextpage.backend.controller;
 import com.nextpage.backend.config.jwt.TokenService;
 import com.nextpage.backend.dto.request.UserCreateRequest;
 import com.nextpage.backend.dto.response.ApiResponse;
+import com.nextpage.backend.dto.response.SignUpResponseDTO;
 import com.nextpage.backend.dto.response.UserResponseDTO;
 import com.nextpage.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,7 +29,7 @@ public class UserController {
     @Operation(summary = "회원가입", description = "유저를 생성합니다.")
     @PostMapping
     public ResponseEntity<ApiResponse> createUser(@RequestBody @Valid UserCreateRequest request) {
-        UserResponseDTO user = userService.createUser(request);
+        SignUpResponseDTO user = userService.createUser(request);
         return ResponseEntity.ok()
                 .body(new ApiResponse(HttpStatus.OK.value(), "유저 정보를 불러왔습니다.", user));
     }
