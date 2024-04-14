@@ -14,7 +14,7 @@ import java.util.Collections;
 
 @RequiredArgsConstructor
 @Service
-public class CustomOAuth2UserService implements org.springframework.security.oauth2.client.userinfo.OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
     // 소셜 로그인 이후 가져온 사용자의 정보 기반으로 가입 및 정보 수정 등의 기능 수행
 
     @Override

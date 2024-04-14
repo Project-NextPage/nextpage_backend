@@ -43,7 +43,8 @@ public class UserService {
         return new UserResponseDTO(user);
     }
 
-    public void deleteUser(Long userId) {
+    public void deleteUser(HttpServletRequest request) {
+        Long userId = tokenService.getUserIdFromToken(request);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 유저입니다."));
         userRepository.delete(user);
