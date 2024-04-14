@@ -3,6 +3,7 @@ package com.nextpage.backend.service;
 
 import com.nextpage.backend.config.jwt.TokenService;
 import com.nextpage.backend.dto.request.StorySaveRequest;
+import com.nextpage.backend.dto.response.RootResponseDTO;
 import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.dto.response.StoryListResponseDTO;
@@ -16,7 +17,6 @@ import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.List;
 import java.util.stream.Collectors;
 
 
@@ -36,34 +36,50 @@ public class StoryService {
         this.userRepository = userRepository;
     }
 
-    public List<Story> getRootStories() { // parentId가 없는 루트 스토리들 조회
-        return storyRepository.findRootStories();
+    public List<RootResponseDTO> getRootStories() { // parentId가 없는 루트 스토리 목록 조회
+        List<Story> rootStories = storyRepository.findRootStories();
+        List<RootResponseDTO> rootStoriesList = rootStories.stream()
+                .map(story -> new RootResponseDTO(
+                        story.getId(),
+                        story.getUserNickname(),
+                        story.getContent(),
+                        story.getImageUrl(),
+                        story.getCreatedAt()
+                ))
+                .collect(Collectors.toList()); // 루트 스토리 목록 리스트 생성
+        if (rootStoriesList.isEmpty()) { throw new NoSuchElementException("스토리가 존재하지 않습니다."); }
+
+        return rootStoriesList;
     }
 
     public StoryDetailsResponseDTO getStoryDetails(Long storyId) { // 스토리 상세 조회
-        // storyId로 스토리 찾기
-        Story story = storyRepository.findById(storyId).orElseThrow(() -> new NoSuchElementException("해당 ID의 스토리를 찾을 수 없습니다 [id: " + storyId + "]"));
-
+        Story story = storyRepository.findById(storyId)
+                .orElseThrow(() -> new NoSuchElementException("해당 ID의 스토리를 찾을 수 없습니다 [id: " + storyId + "]"));
+        Long parentId = story.getParentId() != null ? story.getParentId().getId() : null;
         // 스토리 내용을 포함한 응답 객체 생성
-        StoryDetailsResponseDTO responseDTO = new StoryDetailsResponseDTO();
-        responseDTO.setId(story.getId());
-        responseDTO.setContent(story.getContent());
-        responseDTO.setImageUrl(story.getImageUrl());
-        responseDTO.setUserNickname(story.getUserNickname());
+        StoryDetailsResponseDTO storyDetails = new StoryDetailsResponseDTO(
+                story.getId(),
+                story.getContent(),
+                story.getImageUrl(),
+                story.getUserNickname(),
+                parentId,
+                getChildIds(story),
+                getChildContents(story)
+        );
+        return storyDetails;
+    }
 
-        // 부모 자식 스토리의 ID와 content
-        responseDTO.setParentId(story.getParentId() != null ? story.getParentId().getId() : null);
-        List<Long> childIds = story.getChildId().stream().map(Story::getId).collect(Collectors.toList());
-        responseDTO.setChildId(childIds);
-        List<String> childContents = story.getChildId().stream().map(Story::getContent).collect(Collectors.toList());
-        responseDTO.setChildContent(childContents);
+    public List<Long> getChildIds(Story story) {
+        return story.getChildId().stream().map(Story::getId).collect(Collectors.toList());
+    }
 
-        return responseDTO;
+    public List<String> getChildContents(Story story) {
+        return story.getChildId().stream().map(Story::getContent).collect(Collectors.toList());
     }
 
     // 스토리 생성 메서드
     public void generateStory(StorySaveRequest request, Long parentId, HttpServletRequest httpServletRequest) {
-        tokenService.validateAccessToken(tokenService.resolveAccessToken(httpServletRequest)); // 만료 검사
+        tokenService.validateAccessToken(httpServletRequest); // 만료 검사
         String s3Url = imageService.uploadImageToS3(request.getImageUrl());
         if (s3Url != null) {
             // 토큰에서 userId 추출

@@ -2,7 +2,6 @@ package com.nextpage.backend.controller;
 
 import com.nextpage.backend.dto.request.StorySaveRequest;
 import com.nextpage.backend.dto.response.*;
-import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.service.StoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,8 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
 
 
 @Tag(name = "Stories", description = "Story 관리")
@@ -31,46 +28,19 @@ public class StoryController {
 
     @Operation(summary = "루트 스토리 조회", description = "루트 스토리의 목록을 조회합니다.")
     @GetMapping // 루트 스토리 조회
-    public ResponseEntity<?> getRootStories() {
-        try {
-            List<Story> rootStories = storyService.getRootStories();
-            if (rootStories.isEmpty()) {
-                return ResponseEntity.ok()
-                        .body(new ApiResponse(404, "루트 스토리가 없습니다.", null));
-            }
-            List<RootResponseDTO.StoryInfo> storyInfos = rootStories.stream()
-                    .map(story -> new RootResponseDTO.StoryInfo(
-                            story.getId(),
-                            story.getUserNickname(),
-                            story.getContent(),
-                            story.getImageUrl(),
-                            story.getCreatedAt()
-                    ))
-                    .collect(Collectors.toList()); // 루트 스토리 목록 리스트 생성
-            RootResponseDTO responseData = new RootResponseDTO(storyInfos);
-            return ResponseEntity.ok()
-                    .body(new ApiResponse(200, "루트 스토리 목록을 정상적으로 불러왔습니다.", responseData));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse(500, "루트 스토리 조회 중 오류가 발생했습니다.", null));
-        }
+    public ResponseEntity<ApiResponse> getRootStories() {
+        List<RootResponseDTO> rootStoriesList = storyService.getRootStories();
+        return ResponseEntity.ok()
+                .body(new ApiResponse(200, "루트 스토리의 모든 목록을 조회했습니다.", rootStoriesList));
     }
 
     @Operation(summary = "스토리 상세 조회", description = "단일 스토리의 상세 내용을 조회합니다.")
     @Parameter(name = "storyId", description = "조회할 스토리 아이디")
     @GetMapping("/details/{storyId}") // 스토리 상세 조회
-    public ResponseEntity<?> getStoryDetails(@PathVariable("storyId") Long storyId) {
-        try {
-            StoryDetailsResponseDTO storyDetails = storyService.getStoryDetails(storyId);
-            return ResponseEntity.ok()
-                    .body(new ApiResponse(200, "스토리를 정상적으로 조회 했습니다. [id: " + storyDetails.getId() + "]", storyDetails));
-        } catch (NoSuchElementException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse(404, e.getMessage(), null));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse(500, "스토리 조회 중 오류가 발생했습니다.", null));
-        }
+    public ResponseEntity<ApiResponse> getStoryDetails(@PathVariable Long storyId) {
+        StoryDetailsResponseDTO storyDetails = storyService.getStoryDetails(storyId);
+        return ResponseEntity.ok()
+                .body(new ApiResponse(200, "스토리의 상세 내용을 조회했습니다.", storyDetails));
     }
 
     @Operation(summary = "스토리 생성", description = "새로운 스토리를 생성합니다.")

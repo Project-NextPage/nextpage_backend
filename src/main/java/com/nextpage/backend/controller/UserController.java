@@ -3,12 +3,13 @@ package com.nextpage.backend.controller;
 import com.nextpage.backend.config.jwt.TokenService;
 import com.nextpage.backend.dto.request.UserCreateRequest;
 import com.nextpage.backend.dto.response.ApiResponse;
+import com.nextpage.backend.dto.response.SignUpResponseDTO;
 import com.nextpage.backend.dto.response.UserResponseDTO;
 import com.nextpage.backend.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,18 +26,18 @@ public class UserController {
         this.tokenService = tokenService;
     }
 
-    @Operation(summary = "회원가입 및 로그인", description = "회원가입 및 로그인을 진행합니다.")
+    @Operation(summary = "회원가입", description = "유저를 생성합니다.")
     @PostMapping
-    public ResponseEntity<ApiResponse> createUser(@RequestBody UserCreateRequest request) {
-        UserResponseDTO user = userService.createUser(request);
+    public ResponseEntity<ApiResponse> createUser(@RequestBody @Valid UserCreateRequest request) {
+        SignUpResponseDTO user = userService.createUser(request);
         return ResponseEntity.ok()
                 .body(new ApiResponse(HttpStatus.OK.value(), "유저 정보를 불러왔습니다.", user));
     }
 
-    @Operation(summary = "회원가입 및 로그인", description = "회원가입 및 로그인을 진행합니다.")
+    @Operation(summary = "회원탈퇴", description = "유저를 삭제합니다. (Hard Delete)")
     @DeleteMapping("/delete/{userId}")
-    public ResponseEntity<ApiResponse> deleteUser(@PathVariable Long userId) {
-        userService.deleteUser(userId);
+    public ResponseEntity<ApiResponse> deleteUser(HttpServletRequest request) {
+        userService.deleteUser(request);
         return ResponseEntity.ok()
                 .body(new ApiResponse(HttpStatus.OK.value(), "유저 정보를 삭제했습니다.", null));
     }
