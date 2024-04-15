@@ -58,18 +58,13 @@ public class StoryController {
         }
     }
 
-
     @Operation(summary = "시나리오 조회", description = "시나리오의 스토리 목록을 조회합니다.")
     @Parameter(name = "rootId", description = "조회할 시나리오의 루트 스토리 아이디")
     @GetMapping("/{rootId}") // 시나리오 조회
     public ResponseEntity<ApiResponse> getStoriesByRootId(@PathVariable Long rootId) {
         List<ScenarioResponseDTO> storiesByRoot = storyService.getStoriesByRootId(rootId);
-        if (storiesByRoot.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse(HttpStatus.NOT_FOUND.value(), "해당 ID를 가진 스토리가 존재하지 않습니다.", null));
-        } else {
-            return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "시나리오 조회 완료.", storiesByRoot));
-        }
+        return ResponseEntity.ok()
+                .body(new ApiResponse(HttpStatus.OK.value(), "시나리오 조회 완료.", storiesByRoot));
     }
 
     @Operation(summary = "특정 분기 조회", description = "특정 분기의 스토리들을 조회합니다.")
@@ -77,12 +72,8 @@ public class StoryController {
     @GetMapping("/branch/{storyId}") // 특정 분기 조회
     public ResponseEntity<ApiResponse> getStoriesByleafId(@PathVariable Long storyId) {
         List<StoryListResponseDTO> storiesByLeaf = storyService.getStoriesByleafId(storyId);
-        if (storiesByLeaf.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse(HttpStatus.NOT_FOUND.value(), "해당 ID를 가진 스토리가 존재하지 않습니다.", null));
-        } else {
-            return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "시나리오 조회 완료.", storiesByLeaf));
-        }
+        return ResponseEntity.ok()
+                .body(new ApiResponse(HttpStatus.OK.value(), "시나리오 조회 완료.", storiesByLeaf));
     }
 
     @Operation(summary = "이미지 생성", description = "스토리의 관련된 이미지를 생성합니다.")
