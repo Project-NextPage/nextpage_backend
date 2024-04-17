@@ -11,11 +11,11 @@ import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.repository.StoryRepository;
 import com.nextpage.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -23,14 +23,13 @@ import java.util.stream.Collectors;
 @Service
 public class StoryService {
     private final StoryRepository storyRepository;
-    private final OpenAiService openAiService;
     private final ImageService imageService;
     private final TokenService tokenService;
     private final UserRepository userRepository;
+    private static final Logger logger = LoggerFactory.getLogger(StoryService.class);
 
-    public StoryService(StoryRepository storyRepository, OpenAiService openAiService, ImageService imageService, TokenService tokenService, UserRepository userRepository) {
+    public StoryService(StoryRepository storyRepository, ImageService imageService, TokenService tokenService, UserRepository userRepository) {
         this.storyRepository = storyRepository;
-        this.openAiService = openAiService;
         this.imageService = imageService;
         this.tokenService = tokenService;
         this.userRepository = userRepository;
@@ -77,39 +76,27 @@ public class StoryService {
         return story.getChildId().stream().map(Story::getContent).collect(Collectors.toList());
     }
 
-    // 스토리 생성 메서드
     public void generateStory(StorySaveRequest request, Long parentId, HttpServletRequest httpServletRequest) {
-        tokenService.validateAccessToken(httpServletRequest); // 만료 검사
+        String userNickname = getUserNickname(httpServletRequest);
         String s3Url = imageService.uploadImageToS3(request.getImageUrl());
-        if (s3Url != null) {
-            // 토큰에서 userId 추출
-            Long userId = tokenService.getUserIdFromToken(httpServletRequest);
-            // userId를 사용하여 닉네임 조회
-            Optional<String> userNicknameOpt = userRepository.findNicknameById(userId);
-
-            // Optional<String> 처리
-            String userNickname = userNicknameOpt.orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-            Story story = request.toEntity();
-            story.setContent(request.getContent());
-            story.setCreatedAt(LocalDateTime.now());
-            story.setUpdatedAt(LocalDateTime.now());
-            story.setIsDeleted(false);
-            story.setUserNickname(userNickname);
-
-            if (parentId != null) {
-                // 부모 노드가 있는 경우
-                Optional<Story> parentStoryOptional = storyRepository.findById(parentId);
-                if (parentStoryOptional.isPresent()) {
-                    Story parentStory = parentStoryOptional.get();
-                    // 부모 노드와 연결
-                    parentStory.getChildId().add(story);
-                    story.setParentId(parentStory);
-                    storyRepository.save(parentStory);
-                } else throw new RuntimeException("Parent story not found");
-            } else storyRepository.save(story);
-        } else throw new RuntimeException("이미지 업로드에 실패했습니다.");
+        Optional<Story> parentStory = getParentById(parentId);
+        Story story = request.toEntity(userNickname, s3Url, parentStory.orElse(null));
+        storyRepository.save(story);
     }
+
+
+    private String getUserNickname(HttpServletRequest httpServletRequest) {
+        // 토큰에서 userId 추출 후 닉네임 조회
+        Long userId = tokenService.getUserIdFromToken(httpServletRequest);
+        return userRepository.findNicknameById(userId).orElseThrow(() ->
+                new UsernameNotFoundException("User not found"));
+    }
+
+    private Optional<Story> getParentById(Long parentId) {
+        // 부모 ID가 주어진 경우, 부모 스토리 조회
+        return Optional.ofNullable(parentId).flatMap(storyRepository::findById);
+    }
+
   
     public List<ScenarioResponseDTO> getStoriesByRootId(Long rootId) { //시나리오 조회
         List<Story> result= storyRepository.findAllChildrenByRootId(rootId); //시나리오 조회
@@ -145,22 +132,5 @@ public class StoryService {
         }
         Collections.reverse(stories);
         return stories;
-    }
-
-    public Mono<String> generatePicture(String content) {
-        // 프롬프트 설정
-        String promptKeyword = "Design: a detailed digital illustration drawn with bright colors and clean lines. Please make the following images according to the previous requirements: ";
-        String conditions = "When generating an image, be sure to observe the following conditions: Do not add text to the image. I want an illustration image, not contain text in the image";
-
-        // 프롬프트 구성
-        String promptImage = conditions + "\n" + promptKeyword + content;
-
-        // OpenAiService를 통해 이미지 생성 요청 후 URL 반환
-        return openAiService.generateImage(promptImage)
-                .onErrorResume(e -> {
-                    // 에러 처리 로직. 예를 들어, 로깅하거나 기본 이미지 URL 반환
-                    System.err.println("Error generating image: " + e.getMessage());
-                    return Mono.just("Error or default image URL");
-                });
     }
 }

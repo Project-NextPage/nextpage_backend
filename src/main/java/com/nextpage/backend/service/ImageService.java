@@ -26,7 +26,7 @@ import java.nio.file.Path;
 @Service
 public class ImageService {
 
-    private final Logger logger = LoggerFactory.getLogger(ImageService.class);
+    private static final Logger logger = LoggerFactory.getLogger(ImageService.class);
     private final AmazonS3 amazonS3;
 
     @Value("${AWS_BUCKET}")

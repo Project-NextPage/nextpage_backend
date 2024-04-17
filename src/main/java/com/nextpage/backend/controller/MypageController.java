@@ -1,7 +1,6 @@
 package com.nextpage.backend.controller;
 
 import com.nextpage.backend.dto.response.ApiResponse;
-import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryListResponseDTO;
 import com.nextpage.backend.service.MypageService;
 import io.swagger.v3.oas.annotations.Operation;
