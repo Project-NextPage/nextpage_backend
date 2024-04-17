@@ -84,7 +84,6 @@ public class StoryService {
         storyRepository.save(story);
     }
 
-
     private String getUserNickname(HttpServletRequest httpServletRequest) {
         // 토큰에서 userId 추출 후 닉네임 조회
         Long userId = tokenService.getUserIdFromToken(httpServletRequest);
@@ -97,25 +96,22 @@ public class StoryService {
         return Optional.ofNullable(parentId).flatMap(storyRepository::findById);
     }
 
-  
     public List<ScenarioResponseDTO> getStoriesByRootId(Long rootId) { //시나리오 조회
         List<Story> result= storyRepository.findAllChildrenByRootId(rootId); //시나리오 조회
         List<ScenarioResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
         for (Story story : result) {
-            ScenarioResponseDTO scenarioResponseDTO = new ScenarioResponseDTO(); //각 자식 스토리의 새로운 DTO객체 생성
-            scenarioResponseDTO.setId(story.getId());
-
-            Long parentId = null; //parentid 가져오는 부분만 따로 지정
-            Optional<Story> parentStoryOptional = storyRepository.findParentByChildId(story.getId());
-            if (parentStoryOptional.isPresent()) {
-                parentId = parentStoryOptional.get().getId();
-            }
-            scenarioResponseDTO.setParentId(parentId);
-
-            scenarioResponseDTO.setImageUrl(story.getImageUrl());
+            Long parentId = getParentId(story);
+            ScenarioResponseDTO scenarioResponseDTO = new ScenarioResponseDTO(
+                    story.getId(),
+                    parentId,
+                    story.getImageUrl()
+            ); //각 자식 스토리의 새로운 DTO객체 생성
             stories.add(scenarioResponseDTO); //모든 필요한 부분을 채운 객체를 추가한다.
         }
         Collections.reverse(stories);
+        if (stories.isEmpty()) {
+            throw new NoSuchElementException("스토리가 존재하지 않습니다.");
+        }
         return stories;
     }
 
@@ -123,14 +119,26 @@ public class StoryService {
         List<Story> result= storyRepository.findRecursivelyByLeafId(leafId);
         List<StoryListResponseDTO> stories = new ArrayList<>(); //원하는 부분만 가져오기위해 DTO 설정
         for (Story story : result) {
-            StoryListResponseDTO storyListResponseDTO = new StoryListResponseDTO(); //각 자식 스토리의 새로운 DTO객체 생성
-            storyListResponseDTO.setId(story.getId());
-            storyListResponseDTO.setContent(story.getContent());
-            storyListResponseDTO.setUserNickname(story.getUserNickname());
-            storyListResponseDTO.setImageUrl(story.getImageUrl());
+            StoryListResponseDTO storyListResponseDTO = new StoryListResponseDTO(
+                    story.getId(),
+                    story.getContent(),
+                    story.getUserNickname(),
+                    story.getImageUrl()
+            ); //각 자식 스토리의 새로운 DTO객체 생성
             stories.add(storyListResponseDTO); //모든 필요한 부분을 채운 객체를 추가한다.
         }
         Collections.reverse(stories);
+        if (stories.isEmpty()) { throw new NoSuchElementException("스토리가 존재하지 않습니다."); }
         return stories;
     }
+
+    public Long getParentId(Story story){ // 부모 ID 가져오는 함수 분리
+        Long parentId = null; //parentid 가져오는 부분만 따로 지정
+        Optional<Story> parentStoryOptional = storyRepository.findParentByChildId(story.getId());
+        if (parentStoryOptional.isPresent()) {
+            parentId = parentStoryOptional.get().getId();
+        }
+        return parentId;
+    }
+
 }

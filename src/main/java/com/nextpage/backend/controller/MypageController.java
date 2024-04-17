@@ -26,16 +26,13 @@ public class MypageController {
         this.mypageService = mypageService;
     }
 
+
     @Operation(summary = "내가 쓴 스토리 조회", description = "특정 닉네임의 스토리를 조회합니다.")
     @Parameter(name = "nickname", description = "조회할 스토리들의 작성자 닉네임")
     @GetMapping("/mystories/{nickname}") // 특정 분기 조회
     public ResponseEntity<ApiResponse> getStoriesByNickname(@PathVariable String nickname) {
         List<StoryListResponseDTO> storiesByNickname = mypageService.getStoriesByNickname(nickname);
-        if (storiesByNickname.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse(HttpStatus.NOT_FOUND.value(), "해당 작성자가 작성한 스토리가 존재하지 않습니다.", null));
-        } else {
-            return ResponseEntity.ok(new ApiResponse(HttpStatus.OK.value(), "스토리 조회 완료.", storiesByNickname));
-        }
+        return ResponseEntity.ok()
+                .body(new ApiResponse(HttpStatus.OK.value(), "스토리 조회 완료.", storiesByNickname));
     }
 }
