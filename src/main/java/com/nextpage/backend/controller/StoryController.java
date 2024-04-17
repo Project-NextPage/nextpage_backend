@@ -2,15 +2,16 @@ package com.nextpage.backend.controller;
 
 import com.nextpage.backend.dto.request.StorySaveRequest;
 import com.nextpage.backend.dto.response.*;
+import com.nextpage.backend.service.OpenAiService;
 import com.nextpage.backend.service.StoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -21,9 +22,12 @@ import java.util.List;
 public class StoryController {
 
     private final StoryService storyService;
+    private final OpenAiService openAiService;
 
-    public StoryController(StoryService storyService) {
+    public StoryController(StoryService storyService, OpenAiService openAiService) {
+
         this.storyService = storyService;
+        this.openAiService = openAiService;
     }
 
     @Operation(summary = "루트 스토리 조회", description = "루트 스토리의 목록을 조회합니다.")
@@ -45,17 +49,11 @@ public class StoryController {
 
     @Operation(summary = "스토리 생성", description = "새로운 스토리를 생성합니다.")
     @PostMapping()
-    public ResponseEntity<ApiResponse> createStory(@RequestBody StorySaveRequest storyRequest,
+    public ResponseEntity<ApiResponse> createStory(@RequestBody @Valid StorySaveRequest storyRequest,
                                                    @RequestParam(required = false) Long parentId,
                                                    HttpServletRequest request) {
-        try {
-            storyService.generateStory(storyRequest, parentId, request);
-            // 스토리 생성 성공 응답
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(201, "스토리 생성을 완료했습니다.", null));
-        } catch (Exception e) {
-            // 스토리 생성 실패 응답
-            return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(new ApiResponse(422, "스토리 생성에 실패했습니다.: " + e.getMessage(), null));
-        }
+        storyService.generateStory(storyRequest, parentId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(201, "스토리 생성을 완료했습니다.", null));
     }
 
     @Operation(summary = "시나리오 조회", description = "시나리오의 스토리 목록을 조회합니다.")
@@ -78,12 +76,8 @@ public class StoryController {
 
     @Operation(summary = "이미지 생성", description = "스토리의 관련된 이미지를 생성합니다.")
     @PostMapping("/images")
-    public Mono<ResponseEntity<ApiResponse>> generateImage(@RequestParam String content) {
-        return storyService.generatePicture(content)
-                .map(imageUrl -> ResponseEntity.ok().body(new ApiResponse(200, "이미지 생성에 성공했습니다.", imageUrl)))
-                .onErrorResume(e -> Mono.just(
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .body(new ApiResponse(500, "이미지 생성 중 오류가 발생했습니다.", null))
-                ));
+    public ResponseEntity<ApiResponse> generateImage(@RequestParam String content) {
+        String imageUrl = openAiService.generateImage(content);
+        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse(200, "이미지 생성에 성공했습니다.", imageUrl));
     }
 }
