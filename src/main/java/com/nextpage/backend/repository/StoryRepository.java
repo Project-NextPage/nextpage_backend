@@ -13,7 +13,6 @@ public interface StoryRepository extends Neo4jRepository<Story,Long> {
 
     // 부모 관계가 없는 스토리(루트 스토리) 찾기
     @Query("MATCH (s:Story) WHERE NOT (s)<-[:PARENT_OF]-() RETURN s")
-
     List<Story> findRootStories();
 
     // 해당 스토리의 모든 자식을 가져오기.

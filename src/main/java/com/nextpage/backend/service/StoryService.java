@@ -8,11 +8,12 @@ import com.nextpage.backend.dto.response.ScenarioResponseDTO;
 import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.dto.response.StoryListResponseDTO;
 import com.nextpage.backend.entity.Story;
+import com.nextpage.backend.error.exception.story.StoryNotFoundException;
 import com.nextpage.backend.repository.StoryRepository;
 import com.nextpage.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -20,52 +21,31 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
+@Slf4j
+@RequiredArgsConstructor
 @Service
 public class StoryService {
     private final StoryRepository storyRepository;
     private final ImageService imageService;
     private final TokenService tokenService;
     private final UserRepository userRepository;
-    private static final Logger logger = LoggerFactory.getLogger(StoryService.class);
 
-    public StoryService(StoryRepository storyRepository, ImageService imageService, TokenService tokenService, UserRepository userRepository) {
-        this.storyRepository = storyRepository;
-        this.imageService = imageService;
-        this.tokenService = tokenService;
-        this.userRepository = userRepository;
-    }
-
-    public List<RootResponseDTO> getRootStories() { // parentId가 없는 루트 스토리 목록 조회
+    // parentId가 없는 루트 스토리 목록 조회
+    public List<RootResponseDTO> getRootStories() {
         List<Story> rootStories = storyRepository.findRootStories();
         List<RootResponseDTO> rootStoriesList = rootStories.stream()
-                .map(story -> new RootResponseDTO(
-                        story.getId(),
-                        story.getUserNickname(),
-                        story.getContent(),
-                        story.getImageUrl(),
-                        story.getCreatedAt()
-                ))
+                .map(story -> RootResponseDTO.of(story))
                 .collect(Collectors.toList()); // 루트 스토리 목록 리스트 생성
-        if (rootStoriesList.isEmpty()) { throw new NoSuchElementException("스토리가 존재하지 않습니다."); }
-
+        if (rootStoriesList.isEmpty()) { throw new StoryNotFoundException(); }
         return rootStoriesList;
     }
 
     public StoryDetailsResponseDTO getStoryDetails(Long storyId) { // 스토리 상세 조회
         Story story = storyRepository.findById(storyId)
-                .orElseThrow(() -> new NoSuchElementException("해당 ID의 스토리를 찾을 수 없습니다 [id: " + storyId + "]"));
+                .orElseThrow(StoryNotFoundException::new);
         Long parentId = story.getParentId() != null ? story.getParentId().getId() : null;
         // 스토리 내용을 포함한 응답 객체 생성
-        StoryDetailsResponseDTO storyDetails = new StoryDetailsResponseDTO(
-                story.getId(),
-                story.getContent(),
-                story.getImageUrl(),
-                story.getUserNickname(),
-                parentId,
-                getChildIds(story),
-                getChildContents(story)
-        );
-        return storyDetails;
+        return StoryDetailsResponseDTO.of(story, parentId, getChildIds(story), getChildContents(story));
     }
 
     public List<Long> getChildIds(Story story) {
