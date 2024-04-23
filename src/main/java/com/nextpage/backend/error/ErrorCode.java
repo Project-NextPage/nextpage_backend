@@ -17,6 +17,7 @@ public enum ErrorCode {
 
     // User
     USER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "U001", "유저를 찾을 수 없음"),
+    EMAIL_DUPLICATION(HttpStatus.CONFLICT.value(), "U002", "회원 이메일 중복")
 
     ;
 

@@ -5,11 +5,11 @@ import com.nextpage.backend.dto.request.UserCreateRequest;
 import com.nextpage.backend.dto.response.SignUpResponseDTO;
 import com.nextpage.backend.dto.response.UserResponseDTO;
 import com.nextpage.backend.entity.User;
+import com.nextpage.backend.error.exception.user.EmailDuplicationException;
+import com.nextpage.backend.error.exception.user.UserNotFoundException;
 import com.nextpage.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Service;
-
-import java.util.NoSuchElementException;
 
 @Service
 public class UserService {
@@ -25,9 +25,9 @@ public class UserService {
         String email = request.getEmail();
         String nickname = request.getNickname();
         if (userRepository.existsByEmail(email)) { // 이미 존재하는 이메일이면 유저 생성 x
-            throw new NoSuchElementException("이미 존재하는 이메일입니다.");
+            throw new EmailDuplicationException();
         }
-        User newUser = new User().builder()
+        User newUser = User.builder()
                 .email(email)
                 .nickname(nickname)
                 .build();
@@ -38,7 +38,7 @@ public class UserService {
 
     public User updateUserId(Long id, String nickname) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 유저입니다."));
+                .orElseThrow(UserNotFoundException::new);
         user.update(nickname + "#" + user.getId());
         userRepository.save(user);
         return user;
@@ -48,7 +48,7 @@ public class UserService {
         tokenService.validateAccessToken(request); // 만료 검사
         Long userId = tokenService.getUserIdFromToken(request);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 유저입니다."));
+                .orElseThrow(UserNotFoundException::new);
         userRepository.delete(user);
     }
 
@@ -56,7 +56,7 @@ public class UserService {
         tokenService.validateAccessToken(request); // 만료 검사
         Long userId = tokenService.getUserIdFromToken(request);
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 유저입니다."));
+                .orElseThrow(UserNotFoundException::new);
         return new UserResponseDTO(user);
     }
 }
