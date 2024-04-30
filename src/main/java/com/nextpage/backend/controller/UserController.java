@@ -35,7 +35,7 @@ public class UserController {
     }
 
     @Operation(summary = "회원탈퇴", description = "유저를 삭제합니다. (Hard Delete)")
-    @DeleteMapping("/delete/{userId}")
+    @DeleteMapping("/delete")
     public ResponseEntity<ApiResponse> deleteUser(HttpServletRequest request) {
         userService.deleteUser(request);
         return ResponseEntity.ok()
@@ -46,7 +46,7 @@ public class UserController {
     @PostMapping("/auth/token")
     public ResponseEntity<ApiResponse> reGenerateAccessToken(HttpServletRequest request) {
         // 이 때 받은 토큰은 refresh 토큰
-        String accessToken = tokenService.reGenereteAccessToken(request);
+        String accessToken = tokenService.reGenerateAccessToken(request);
         return ResponseEntity.ok()
                 .body(new ApiResponse(HttpStatus.OK.value(), "새로운 액세스 토큰 발급 완료", accessToken));
     }

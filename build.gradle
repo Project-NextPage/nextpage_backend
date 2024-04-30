@@ -68,6 +68,9 @@ dependencies {
 
 	// thumbnailator
 	implementation 'net.coobird:thumbnailator:0.4.14'
+
+	// Validation - @NotBlank
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 tasks.named('test') {

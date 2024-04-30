@@ -1,23 +1,22 @@
 package com.nextpage.backend.config.jwt;
 
+import com.nextpage.backend.error.exception.auth.TokenNotExistsException;
+import com.nextpage.backend.error.exception.auth.TokenExpiredException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
 
-@Configuration
+@Slf4j
 @Service
 public class TokenService {
-    private final Logger log = LoggerFactory.getLogger(getClass());
     private Key secretKey;
 
     @Value("${jwt.secret-key}")
@@ -36,7 +35,6 @@ public class TokenService {
 
     public String generateAccessToken(Long userId) { // 액세스, 리프레시 토큰 생성 로직 구현
         Claims claims = Jwts.claims().setSubject(String.valueOf(userId));
-
         return Jwts.builder().setClaims(claims)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + ACCESS_EXPIRE_LENGTH))
@@ -53,54 +51,60 @@ public class TokenService {
                 .compact();
     }
 
-    public String reGenereteAccessToken(HttpServletRequest request) { // 액세스 토큰 재발급
-        Long id = getUserIdFromToken(request);
+    public String reGenerateAccessToken(HttpServletRequest request) { // 액세스 토큰 재발급
         validateRefreshToken(request); // 만료 검사
+        Long id = getUserIdFromToken(request);
         return generateAccessToken(id);
     }
 
     public String resolveAccessToken(HttpServletRequest request) {
-        String header = request.getHeader("AUTHORIZATION");
-        String token = header.substring("Bearer ".length()); // Bearer 을 제외한 문자열 반환
-        return token;
+        try {
+            String header = request.getHeader("AUTHORIZATION");
+            return header.substring("Bearer ".length()); // Bearer 을 제외한 문자열 반환
+        } catch (Exception e) {
+            throw new TokenNotExistsException();
+        }
     }
 
     public String resolveRefreshToken(HttpServletRequest request) {
-        return request.getHeader("REFRESH-TOKEN");
+        try {
+            return request.getHeader("REFRESH-TOKEN");
+        } catch (Exception e) {
+            throw new TokenNotExistsException();
+        }
     }
 
-    public void validateAccessToken(HttpServletRequest request) { // 만료 여부 반환
+    public void validateAccessToken(HttpServletRequest request) { // 만료 여부 검사
         try {
             String token = resolveAccessToken(request);
-            Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(secretKey)
-                    .build().parseClaimsJws(token);
-            claims.getBody().getExpiration().after(new Date(System.currentTimeMillis()));
-        } catch (ExpiredJwtException ex) {
-            log.error("토큰이 만료되었습니다.");
-            throw new RuntimeException("토큰이 만료되었습니다.");
+            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
+        } catch (ExpiredJwtException e) {
+            throw new TokenExpiredException();
         }
     }
 
     public void validateRefreshToken(HttpServletRequest request) {
         try {
             String token = resolveRefreshToken(request);
-            Jws<Claims> claims = Jwts.parserBuilder().setSigningKey(secretKey)
-                    .build().parseClaimsJws(token);
-            claims.getBody().getExpiration().after(new Date(System.currentTimeMillis()));
-        } catch (ExpiredJwtException ex) {
-            log.error("refresh 토큰이 만료되었습니다.");
-            throw new RuntimeException("refresh 토큰이 만료되었습니다.");
+            Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
+        } catch (ExpiredJwtException e) { // 토큰이 만료된 경우
+            throw new TokenExpiredException();
+        } catch (IllegalArgumentException e) { // 토큰이 비어있거나 형식이 잘못된 경우
+            throw new TokenNotExistsException();
         }
     }
 
     public Long getUserIdFromToken(HttpServletRequest request) { // 토큰에서 userId 정보 꺼내기
         String token = resolveAccessToken(request);
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(secretKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-
-        return Long.parseLong(claims.getSubject());
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            return Long.parseLong(claims.getSubject());
+        } catch (ExpiredJwtException e) {
+            return Long.parseLong(e.getClaims().getSubject());
+        }
     }
 }

@@ -11,6 +11,10 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(500, "G001", "서버 오류"),
     INPUT_INVALID_VALUE(409, "G002", "잘못된 입력"),
 
+    // Auth
+    TOKEN_ACCESS_NOT_EXISTS(HttpStatus.UNAUTHORIZED.value(), "A001","토큰을 찾을 수 없음"),
+    TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED.value(), "A002","액세스 토큰 만료"),
+
     // Story
     STORY_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "S001", "스토리를 찾을 수 없음"),
     IMAGE_CREATE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "S002", "이미지 생성 실패"),
@@ -20,12 +24,6 @@ public enum ErrorCode {
     EMAIL_DUPLICATION(HttpStatus.CONFLICT.value(), "U002", "회원 이메일 중복")
 
     ;
-
-
-
-
-
-
 
 
     private final int status;

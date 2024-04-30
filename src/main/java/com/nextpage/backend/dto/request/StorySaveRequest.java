@@ -1,8 +1,9 @@
 package com.nextpage.backend.dto.request;
 
 import com.nextpage.backend.entity.Story;
-import jakarta.validation.constraints.NotEmpty;
-import lombok.*;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
@@ -10,9 +11,9 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class StorySaveRequest {
 
-    @NotEmpty(message = "imageurl은 필수입니다.")
+    @NotBlank(message = "imageUrl은 필수입니다.")
     private final String imageUrl;
-    @NotEmpty(message = "content는 필수입니다.")
+    @NotBlank(message = "content는 필수입니다.")
     private final String content;
 
     public Story toEntity(String userNickname, String imageUrl, Story parentId) {
