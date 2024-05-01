@@ -2,6 +2,7 @@ package com.nextpage.backend.controller;
 
 import com.nextpage.backend.dto.request.StorySaveRequest;
 import com.nextpage.backend.dto.response.*;
+import com.nextpage.backend.result.ResultResponse;
 import com.nextpage.backend.service.OpenAiService;
 import com.nextpage.backend.service.StoryService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,6 +16,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import static com.nextpage.backend.result.ResultCode.*;
+
 
 @Tag(name = "Stories", description = "Story 관리")
 @RestController
@@ -25,26 +28,23 @@ public class StoryController {
     private final OpenAiService openAiService;
 
     public StoryController(StoryService storyService, OpenAiService openAiService) {
-
         this.storyService = storyService;
         this.openAiService = openAiService;
     }
 
     @Operation(summary = "루트 스토리 조회", description = "루트 스토리의 목록을 조회합니다.")
     @GetMapping // 루트 스토리 조회
-    public ResponseEntity<ApiResponse> getRootStories() {
+    public ResponseEntity<ResultResponse> getRootStories() {
         List<RootResponseDTO> rootStoriesList = storyService.getRootStories();
-        return ResponseEntity.ok()
-                .body(new ApiResponse(200, "루트 스토리의 모든 목록을 조회했습니다.", rootStoriesList));
+        return ResponseEntity.ok(ResultResponse.of(STORY_LIST_SUCCESS, rootStoriesList));
     }
 
     @Operation(summary = "스토리 상세 조회", description = "단일 스토리의 상세 내용을 조회합니다.")
     @Parameter(name = "storyId", description = "조회할 스토리 아이디")
     @GetMapping("/details/{storyId}") // 스토리 상세 조회
-    public ResponseEntity<ApiResponse> getStoryDetails(@PathVariable Long storyId) {
+    public ResponseEntity<ResultResponse> getStoryDetails(@PathVariable Long storyId) {
         StoryDetailsResponseDTO storyDetails = storyService.getStoryDetails(storyId);
-        return ResponseEntity.ok()
-                .body(new ApiResponse(200, "스토리의 상세 내용을 조회했습니다.", storyDetails));
+        return ResponseEntity.ok(ResultResponse.of(STORY_DETAIL_INFO_SUCCESS, storyDetails));
     }
 
     @Operation(summary = "스토리 생성", description = "새로운 스토리를 생성합니다.")
