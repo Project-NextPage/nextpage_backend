@@ -1,9 +1,13 @@
 package com.nextpage.backend.service;
 
+import com.nextpage.backend.error.exception.openAI.OpenAiClientException;
+import com.nextpage.backend.error.exception.openAI.OpenAiResponseException;
+import com.nextpage.backend.error.exception.openAI.OpenAiServerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,7 +24,6 @@ public class OpenAiService {
         this.webClient = webClientBuilder.baseUrl("https://api.openai.com/v1/").build();
         this.apiKey = apiKey;
     }
-
     public String generateImage(String content) {
         Map<String, Object> requestBody = prepareRequestBody(content);
         return this.webClient.post()
@@ -28,6 +31,8 @@ public class OpenAiService {
                 .header("Authorization", "Bearer " + this.apiKey)
                 .bodyValue(requestBody)
                 .retrieve()
+                .onStatus(status -> status.is4xxClientError(), response -> Mono.error(new OpenAiClientException()))
+                .onStatus(status -> status.is5xxServerError(), response -> Mono.error(new OpenAiServerException()))
                 .bodyToMono(Map.class)
                 .map(this::extractImageUrl)
                 .block(); // This makes the call synchronous
@@ -44,10 +49,13 @@ public class OpenAiService {
     }
 
     private String extractImageUrl(Map<String, Object> response) {
-        List<Map<String, Object>> images = (List<Map<String, Object>>) response.get("data");
-        return images.stream()
-                .findFirst()
-                .map(image -> (String) image.get("url"))
-                .orElse("Image generation failed");
+        if (response.containsKey("data")) {
+            List<Map<String, Object>> images = (List<Map<String, Object>>) response.get("data");
+            return images.stream()
+                    .findFirst()
+                    .map(image -> (String) image.get("url"))
+                    .orElse("Image generation failed");
+        }
+            throw new OpenAiResponseException();
     }
 }
