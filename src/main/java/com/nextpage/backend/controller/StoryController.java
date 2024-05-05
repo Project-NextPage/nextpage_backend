@@ -49,11 +49,11 @@ public class StoryController {
 
     @Operation(summary = "스토리 생성", description = "새로운 스토리를 생성합니다.")
     @PostMapping()
-    public ResponseEntity<ApiResponse> createStory(@RequestBody @Valid StorySaveRequest storyRequest,
+    public ResponseEntity<ResultResponse> createStory(@RequestBody @Valid StorySaveRequest storyRequest,
                                                    @RequestParam(required = false) Long parentId,
                                                    HttpServletRequest request) {
         storyService.generateStory(storyRequest, parentId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiResponse(201, "스토리 생성을 완료했습니다.", null));
+        return ResponseEntity.ok(ResultResponse.of(STORY_CREATE_SUCCESS));
     }
 
     @Operation(summary = "시나리오 조회", description = "시나리오의 스토리 목록을 조회합니다.")
@@ -76,8 +76,8 @@ public class StoryController {
 
     @Operation(summary = "이미지 생성", description = "스토리의 관련된 이미지를 생성합니다.")
     @PostMapping("/images")
-    public ResponseEntity<ApiResponse> generateImage(@RequestParam String content) {
+    public ResponseEntity<ResultResponse> generateImage(@RequestParam String content) {
         String imageUrl = openAiService.generateImage(content);
-        return ResponseEntity.status(HttpStatus.OK).body(new ApiResponse(200, "이미지 생성에 성공했습니다.", imageUrl));
+        return ResponseEntity.ok(ResultResponse.of(STORY_IMAGE_CREATE_SUCCESS, imageUrl));
     }
 }
