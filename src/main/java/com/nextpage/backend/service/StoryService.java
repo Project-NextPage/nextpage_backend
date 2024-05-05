@@ -9,6 +9,7 @@ import com.nextpage.backend.dto.response.StoryDetailsResponseDTO;
 import com.nextpage.backend.dto.response.StoryListResponseDTO;
 import com.nextpage.backend.entity.Story;
 import com.nextpage.backend.error.exception.story.StoryNotFoundException;
+import com.nextpage.backend.error.exception.user.UserNotFoundException;
 import com.nextpage.backend.repository.StoryRepository;
 import com.nextpage.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -67,8 +68,8 @@ public class StoryService {
     private String getUserNickname(HttpServletRequest httpServletRequest) {
         // 토큰에서 userId 추출 후 닉네임 조회
         Long userId = tokenService.getUserIdFromToken(httpServletRequest);
-        return userRepository.findNicknameById(userId).orElseThrow(() ->
-                new UsernameNotFoundException("User not found"));
+        return userRepository.findNicknameById(userId)
+                .orElseThrow(() -> new UserNotFoundException());
     }
 
     private Optional<Story> getParentById(Long parentId) {
