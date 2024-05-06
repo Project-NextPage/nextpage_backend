@@ -21,7 +21,19 @@ public enum ErrorCode {
 
     // User
     USER_NOT_FOUND(HttpStatus.NOT_FOUND.value(), "U001", "유저를 찾을 수 없음"),
-    EMAIL_DUPLICATION(HttpStatus.CONFLICT.value(), "U002", "회원 이메일 중복")
+    EMAIL_DUPLICATION(HttpStatus.CONFLICT.value(), "U002", "회원 이메일 중복"),
+
+    // OpenAI
+    OPENAI_CLIENT_ERROR(HttpStatus.BAD_REQUEST.value(), "O001", "OpenAI 클라이언트 오류"),
+    OPENAI_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR.value(), "O002", "OpenAI 서버 오류"),
+    OPENAI_INVALID_RESPONSE(HttpStatus.BAD_GATEWAY.value(), "O003", "OpenAI 응답 오류"),
+
+    // Image
+    IMAGE_DOWNLOAD_ERROR(HttpStatus.BAD_REQUEST.value(), "I001", "이미지 다운로드 실패"),
+    IMAGE_RESIZE_ERROR(HttpStatus.BAD_REQUEST.value(), "I002", "이미지 리사이징 실패"),
+    IMAGE_CONVERSION_ERROR(HttpStatus.BAD_REQUEST.value(), "I003", "Webp 변환 실패"),
+    IMAGE_UPLOAD_ERROR(HttpStatus.BAD_REQUEST.value(), "I004", "이미지 S3 업로드 실패");
+
 
     ;
 

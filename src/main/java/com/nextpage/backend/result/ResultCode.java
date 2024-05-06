@@ -19,6 +19,8 @@ public enum ResultCode {
     // STORY
     STORY_LIST_SUCCESS("S001", "스토리 목록 조회 성공"),
     STORY_DETAIL_INFO_SUCCESS("S002", "스토리 상세 조회 성공"),
+    STORY_CREATE_SUCCESS("S201","스토리 생성 성공"),
+    STORY_IMAGE_CREATE_SUCCESS("S201","이미지 생성 성공")
     ;
 
     private final String code;
