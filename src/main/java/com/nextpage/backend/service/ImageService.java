@@ -9,9 +9,8 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.sksamuel.scrimage.webp.WebpWriter;
+import lombok.extern.slf4j.Slf4j;
 import net.coobird.thumbnailator.Thumbnails;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import javax.imageio.ImageIO;
@@ -25,8 +24,8 @@ import java.net.http.HttpResponse;
 import java.nio.file.Path;
 
 @Service
+@Slf4j
 public class ImageService {
-    private static final Logger logger = LoggerFactory.getLogger(ImageService.class);
     private final AmazonS3 amazonS3;
 
     @Value("${AWS_BUCKET}")
@@ -44,7 +43,7 @@ public class ImageService {
     }
 
     private File downloadImage(String imageUrl) throws ImageDownloadException {
-        logger.info("Downloading image to file from URL: {}", imageUrl);
+        log.info("Downloading image to file from URL: {}", imageUrl);
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(imageUrl))
