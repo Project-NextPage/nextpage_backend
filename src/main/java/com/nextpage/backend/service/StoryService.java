@@ -91,7 +91,7 @@ public class StoryService {
         }
         Collections.reverse(stories);
         if (stories.isEmpty()) {
-            throw new NoSuchElementException("스토리가 존재하지 않습니다.");
+            throw new StoryNotFoundException();
         }
         return stories;
     }
@@ -109,7 +109,7 @@ public class StoryService {
             stories.add(storyListResponseDTO); //모든 필요한 부분을 채운 객체를 추가한다.
         }
         Collections.reverse(stories);
-        if (stories.isEmpty()) { throw new NoSuchElementException("스토리가 존재하지 않습니다."); }
+        if (stories.isEmpty()) { throw new StoryNotFoundException(); }
         return stories;
     }
 
