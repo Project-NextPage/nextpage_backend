@@ -20,7 +20,10 @@ public enum ResultCode {
     STORY_LIST_SUCCESS("S001", "스토리 목록 조회 성공"),
     STORY_DETAIL_INFO_SUCCESS("S002", "스토리 상세 조회 성공"),
     STORY_CREATE_SUCCESS("S003","스토리 생성 성공"),
-    STORY_IMAGE_CREATE_SUCCESS("S004","이미지 생성 성공")
+    STORY_IMAGE_CREATE_SUCCESS("S004","이미지 생성 성공"),
+
+    // MYPAGE
+    MYPAGE_MYSTORY_LIST_SUCCESS("M001", "내가 작성한 스토리 조회 성공")
     ;
 
     private final String code;
