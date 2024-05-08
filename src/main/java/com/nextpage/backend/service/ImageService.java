@@ -36,9 +36,18 @@ public class ImageService {
     }
 
     public String uploadImageToS3(String imageUrl) throws ImageDownloadException, ImageResizeException, ImageConversionException, ImageUploadException {
+        long startTime = System.currentTimeMillis();
         File imageFile = downloadImage(imageUrl);
+        long download = System.currentTimeMillis();
         File resizedImage = resizeImage(imageFile);
+        long afterresized = System.currentTimeMillis();
         File webpImage = convertToWebP(resizedImage);
+        long endTime = System.currentTimeMillis();
+        System.out.println("Download Time: " + (download - startTime) + " ms");
+        System.out.println("Resize Time: " + (afterresized - download) + " ms");
+        System.out.println("Convert to WebP Time: " + (endTime - afterresized) + " ms");
+
+
         return uploadFileToS3(webpImage);
     }
 

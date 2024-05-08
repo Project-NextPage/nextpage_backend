@@ -2,7 +2,6 @@ package com.nextpage.backend.entity;
 
 
 import lombok.Getter;
-import lombok.Setter;
 import org.springframework.data.neo4j.core.schema.GeneratedValue;
 import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
@@ -13,7 +12,6 @@ import java.util.List;
 
 @Node
 @Getter
-@Setter
 public class Story {
 
     @Id @GeneratedValue
@@ -28,7 +26,6 @@ public class Story {
     private Story parentId;
 
     // 해당 노드를 부모로 가지는 관계 : child
-    @Relationship(type = "PARENT_OF", direction = Relationship.Direction.OUTGOING)
     private List<Story> childId;
 
     private LocalDateTime createdAt;

@@ -15,7 +15,6 @@ import com.nextpage.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -60,11 +59,10 @@ public class StoryService {
     public void generateStory(StorySaveRequest request, Long parentId, HttpServletRequest httpServletRequest) {
         String userNickname = getUserNickname(httpServletRequest);
         String s3Url = imageService.uploadImageToS3(request.getImageUrl());
-        Optional<Story> parentStory = getParentById(parentId);
-        Story story = request.toEntity(userNickname, s3Url, parentStory.orElse(null));
+        Story parentStory = getParentById(parentId);
+        Story story = request.toEntity(userNickname, s3Url, parentStory);
         storyRepository.save(story);
     }
-
     private String getUserNickname(HttpServletRequest httpServletRequest) {
         // 토큰에서 userId 추출 후 닉네임 조회
         Long userId = tokenService.getUserIdFromToken(httpServletRequest);
@@ -72,9 +70,9 @@ public class StoryService {
                 .orElseThrow(() -> new UserNotFoundException());
     }
 
-    private Optional<Story> getParentById(Long parentId) {
+    private Story getParentById(Long parentId) {
         // 부모 ID가 주어진 경우, 부모 스토리 조회
-        return Optional.ofNullable(parentId).flatMap(storyRepository::findById);
+        return storyRepository.findById(parentId).orElse(null);
     }
 
     public List<ScenarioResponseDTO> getStoriesByRootId(Long rootId) { //시나리오 조회
