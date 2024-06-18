@@ -42,7 +42,6 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
-
       - name: Create .env file
         run: |
           echo $SECRETS_CONTEXT | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' > src/main/resources/env.properties
@@ -78,8 +77,21 @@ jobs:
         run: ./gradlew build
 
       - name: Run Tests
-        run: ./gradlew test
+        run: ./gradlew test jacocoTestReport
         env:
-          SECRETS_CONTEXT: ${{ toJson(secrets) }} 
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
             $(echo $SECRETS_CONTEXT | jq -r 'to_entries|map("export \(.key)=\(.value|tostring)")|.[]')
 
+      - name: Store test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-results
+          path: build/test-results/test
+
+      - name: Store coverage results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: build/reports/jacoco/test/html
