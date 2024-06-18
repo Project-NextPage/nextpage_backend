@@ -1,0 +1,90 @@
+name: CI with Coverage
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-test-with-coverage:
+    runs-on: ubuntu-22.04
+    services:
+      postgres:
+        image: postgres:12.0-alpine
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Create .env file
+        run: |
+          echo $SECRETS_CONTEXT | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|.[]' > src/main/resources/env.properties
+        env:
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in {30..0}; do
+            if docker exec $(docker ps -q --filter name=postgres) pg_isready -U $POSTGRES_USER -d $POSTGRES_DB; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 1
+          done
+          if [ $i -eq 0 ]; then
+            echo "PostgreSQL did not become ready in time"
+            docker logs $(docker ps -q --filter name=postgres)
+            exit 1
+          fi
+        env:
+          POSTGRES_USER: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Run Tests with Coverage
+        run: ./gradlew test jacocoTestReport
+        env:
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
+            $(echo $SECRETS_CONTEXT | jq -r 'to_entries|map("export \(.key)=\(.value|tostring)")|.[]')
+
+      - name: Store test results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: test-results
+          path: build/test-results/test
+
+      - name: Store coverage results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage-report
+          path: build/reports/jacoco/test/html
