@@ -44,23 +44,12 @@ jobs:
 
       - name: Create .env file
         run: |
-          echo "POSTGRES_URL=jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}" >> src/main/resources/env.properties
-          echo "POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}" >> src/main/resources/env.properties
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> src/main/resources/env.properties
-          echo "NEO4J_URI=${{ secrets.SPRING_NEO4J_URI }}" >> src/main/resources/env.properties
-          echo "NEO4J_USERNAME=neo4j" >> src/main/resources/env.properties
-          echo "NEO4J_PASSWORD=${{ secrets.SPRING_NEO4J_PASSWORD }}" >> src/main/resources/env.properties
-          echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> src/main/resources/env.properties
-          echo "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" >> src/main/resources/env.properties
-          echo "AWS_BUCKET=${{ secrets.AWS_BUCKET }}" >> src/main/resources/env.properties
-          echo "NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}" >> src/main/resources/env.properties
-          echo "NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}" >> src/main/resources/env.properties
-          echo "NAVER_REDIRECT_URI=${{ secrets.NAVER_REDIRECT_URI }}" >> src/main/resources/env.properties
-          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> src/main/resources/env.properties
-          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> src/main/resources/env.properties
-          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> src/main/resources/env.properties
-          echo "JWT_EXPIRE_LENGTH=${{ secrets.JWT_EXPIRE_LENGTH }}" >> src/main/resources/env.properties
-          echo "GPT_API_KEY=${{ secrets.GPT_API_KEY }}" >> src/main/resources/env.properties
+          cat <<EOF > src/main/resources/env.properties
+          POSTGRES_URL=jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}
+          POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}
+          SPRING_PROFILES_ACTIVE=oauth,jwt
+          EOF
 
       - name: Set up JDK 17
         uses: actions/setup-java@v2
@@ -78,7 +67,7 @@ jobs:
             echo "Waiting for PostgreSQL..."
             sleep 1
           done
-          if [ $i -eq 0 ]; then
+          if [ $i -eq 0]; then
             echo "PostgreSQL did not become ready in time"
             docker logs $(docker ps -q --filter name=postgres)
             exit 1
@@ -93,17 +82,4 @@ jobs:
           POSTGRES_URL: jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}
           POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-          NEO4J_URI: ${{ secrets.SPRING_NEO4J_URI }}
-          NEO4J_USERNAME: neo4j
-          NEO4J_PASSWORD: ${{ secrets.SPRING_NEO4J_PASSWORD }}
-          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
-          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
-          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
-          NAVER_REDIRECT_URI: ${{ secrets.NAVER_REDIRECT_URI }}
-          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-          JWT_EXPIRE_LENGTH: ${{ secrets.JWT_EXPIRE_LENGTH }}
-          GPT_API_KEY: ${{ secrets.GPT_API_KEY }}
+          SPRING_PROFILES_ACTIVE: oauth,jwt
