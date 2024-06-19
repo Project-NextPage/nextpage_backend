@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-22.04
+
+    services:
+      postgres:
+        image: postgres:12.0-alpine
+        env:
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" 
+          --health-interval 10s 
+          --health-timeout 5s 
+          --health-retries 5
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-2${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Create .env file
+        run: |
+          echo "POSTGRES_URL=jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}" >> src/main/resources/env.properties
+          echo "POSTGRES_USERNAME=${{ secrets.POSTGRES_USERNAME }}" >> src/main/resources/env.properties
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> src/main/resources/env.properties
+          echo "NEO4J_URI=${{ secrets.SPRING_NEO4J_URI }}" >> src/main/resources/env.properties
+          echo "NEO4J_USERNAME=neo4j" >> src/main/resources/env.properties
+          echo "NEO4J_PASSWORD=${{ secrets.SPRING_NEO4J_PASSWORD }}" >> src/main/resources/env.properties
+          echo "AWS_SECRET_KEY=${{ secrets.AWS_SECRET_KEY }}" >> src/main/resources/env.properties
+          echo "AWS_ACCESS_KEY=${{ secrets.AWS_ACCESS_KEY }}" >> src/main/resources/env.properties
+          echo "AWS_BUCKET=${{ secrets.AWS_BUCKET }}" >> src/main/resources/env.properties
+          echo "NAVER_CLIENT_ID=${{ secrets.NAVER_CLIENT_ID }}" >> src/main/resources/env.properties
+          echo "NAVER_CLIENT_SECRET=${{ secrets.NAVER_CLIENT_SECRET }}" >> src/main/resources/env.properties
+          echo "NAVER_REDIRECT_URI=${{ secrets.NAVER_REDIRECT_URI }}" >> src/main/resources/env.properties
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> src/main/resources/env.properties
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> src/main/resources/env.properties
+          echo "JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}" >> src/main/resources/env.properties
+          echo "JWT_EXPIRE_LENGTH=${{ secrets.JWT_EXPIRE_LENGTH }}" >> src/main/resources/env.properties
+          echo "GPT_API_KEY=${{ secrets.GPT_API_KEY }}" >> src/main/resources/env.properties
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          distribution: 'adopt'
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in {30..0}; do
+            if docker exec $(docker ps -q --filter name=postgres) pg_isready -U ${{ secrets.POSTGRES_USERNAME }} -d ${{ secrets.POSTGRES_DB }}; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Waiting for PostgreSQL..."
+            sleep 1
+          done
+          if [ $i -eq 0 ]; then
+            echo "PostgreSQL did not become ready in time"
+            docker logs $(docker ps -q --filter name=postgres)
+            exit 1
+          fi
+
+      - name: Build with Gradle
+        run: ./gradlew build
+
+      - name: Run Tests
+        run: ./gradlew test
+        env:
+          POSTGRES_URL: jdbc:postgresql://localhost:5432/${{ secrets.POSTGRES_DB }}
+          POSTGRES_USERNAME: ${{ secrets.POSTGRES_USERNAME }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+          NEO4J_URI: ${{ secrets.SPRING_NEO4J_URI }}
+          NEO4J_USERNAME: neo4j
+          NEO4J_PASSWORD: ${{ secrets.SPRING_NEO4J_PASSWORD }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_BUCKET: ${{ secrets.AWS_BUCKET }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+          NAVER_REDIRECT_URI: ${{ secrets.NAVER_REDIRECT_URI }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
+          JWT_EXPIRE_LENGTH: ${{ secrets.JWT_EXPIRE_LENGTH }}
+          GPT_API_KEY: ${{ secrets.GPT_API_KEY }}
