@@ -89,14 +89,13 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_BASIC_ENABLED=false
+    depends_on: springboot
     networks:
       - npage
 
   k6:
     image: grafana/k6:latest
     container_name: k6
-    networks:
-      - npage
     ports:
       - "6565:6565"
     environment:
@@ -106,6 +105,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway" # 호스트와 연결(로컬테스트를 위함)
     command: ["run", "/scripts/test_script.js"]
+    networks:
+      - npage
 
   influxdb:
     image: influxdb:1.8
@@ -133,6 +134,8 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     user: root
     restart: always
+    networks:
+      - npage
 
 networks:
   npage:
