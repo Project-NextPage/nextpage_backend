@@ -16,7 +16,7 @@ public class Bookmark {
     @Column(name = "\"id\"", columnDefinition = "INT")
     private Long id;
 
-    @ManyToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne(cascade = CascadeType.PERSIST)
     @JoinColumn(name = "\"userId\"", nullable = false)
     private User user;
 
