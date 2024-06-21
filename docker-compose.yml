@@ -39,6 +39,7 @@ services:
     restart: always
     # 컨테이너명 설정
     container_name: pgadmin4
+    user: root
     # 접근 포트 설정 (컨테이너 외부:컨테이너 내부)
     ports:
       - "5050:80"
@@ -78,10 +79,11 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
+    user: root
     ports:
       - "3001:3000"
-    env_file:
-      - './monitoring/grafana/env.grafana'
+#    env_file:
+#      - './monitoring/grafana/env.grafana'
     volumes:
       - './monitoring/grafana:/var/lib/grafana'
     restart: always
@@ -89,7 +91,8 @@ services:
       - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
       - GF_AUTH_ANONYMOUS_ENABLED=true
       - GF_AUTH_BASIC_ENABLED=false
-    depends_on: springboot
+    depends_on:
+      - springboot
     networks:
       - npage
 
