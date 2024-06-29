@@ -16,6 +16,6 @@ public class OAuth2FailureHandler implements AuthenticationFailureHandler {
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException, ServletException {
         // 인증 실패 시 아래 주소로 리다이렉트
-        response.sendRedirect("http://localhost:3000/login/fail");
+        response.sendRedirect("http://nextpage-front.vercel.app/login/fail");
     }
 }
