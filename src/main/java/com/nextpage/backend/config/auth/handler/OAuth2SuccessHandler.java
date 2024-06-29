@@ -42,11 +42,11 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
             String accessToken = tokenService.generateAccessToken(userId);
             String refreshToken = tokenService.generateRefreshToken();
 
-            targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/oauth2/redirect")
+            targetUrl = UriComponentsBuilder.fromUriString("http://nextpage-front.vercel.app/oauth2/redirect")
                     .queryParam("a", accessToken).queryParam("r", refreshToken)
                     .build().toUriString();
         } else { // 신규 회원인 경우 회원가입 페이지로 이동
-            targetUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/login")
+            targetUrl = UriComponentsBuilder.fromUriString("http://nextpage-front.vercel.app/login")
                     .queryParam("e", email)
                     .build().toUriString();
         }
